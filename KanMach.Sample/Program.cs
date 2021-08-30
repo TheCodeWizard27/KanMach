@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KanMach.Core;
+using System;
 
 namespace KanMach.Sample
 {
@@ -6,7 +7,11 @@ namespace KanMach.Sample
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            KanGameEngineBuilder
+                .CreateDefaultBuilder()
+                .SetStartup<Startup>()
+                .Build()
+                .Run();
         }
     }
 }
