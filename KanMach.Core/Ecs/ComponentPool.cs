@@ -1,46 +1,57 @@
-﻿using System;
+﻿using KanMach.Core.Ecs.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace KanMach.Core.Ecs
 {
 
-    interface IComponentPool
-    {
-        Type ItemType { get; }
-        object GetItem(int idx);
-        void Recycle(int idx);
-        int New();
-        void CopyData(int srcIdx, int dstIdx);
-    }
-
     class ComponentPool<T> : IComponentPool where T : struct
     {
 
-        public List<T> Components;
+        public T[] Components;
+        public int ComponentIndex;
+        public GrowList<int> _freeComponents;
 
-        public Type ItemType => throw new NotImplementedException();
+        public Type ItemType => typeof(T);
 
-        public void CopyData(int srcIdx, int dstIdx)
+        public ComponentPool()
         {
-            throw new NotImplementedException();
+            Components = new T[128];
+            _freeComponents = new GrowList<int>(128);
         }
 
-        public object GetItem(int idx)
+        public void CopyData(int srcId, int targetId)
         {
-            throw new NotImplementedException();
+            Components[targetId] = Components[srcId];
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T GetItem(int id) => ref Components[id];
 
         public int New()
         {
-            throw new NotImplementedException();
+            if(_freeComponents.Index > 0)
+            {
+                return _freeComponents.Take();
+            }
+
+            var id = ComponentIndex;
+            if(Components.Length == id)
+            {
+                Array.Resize(ref Components, ComponentIndex * 2);
+            }
+            ComponentIndex++;
+            return id;
         }
 
-        public void Recycle(int idx)
+        public void Recycle(int id)
         {
-            throw new NotImplementedException();
+            _freeComponents.Add(id);
+            Components[id] = default;
         }
     }
 }
