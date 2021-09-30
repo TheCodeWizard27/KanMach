@@ -10,9 +10,10 @@ namespace KanMach.Core.Ecs
 {
     public class EcsWorld
     {
-        private EcsConfig _config;
+        internal EcsConfig Config;
 
         internal IComponentPool[] ComponentPools;
+        internal GrowList<EcsView> Views;
 
         internal GrowList<int> FreeEntityIds;
         internal EntityData[] Entities;
@@ -23,6 +24,7 @@ namespace KanMach.Core.Ecs
             _config = config ?? EcsConfig.Default;
 
             ComponentPools = new IComponentPool[_config.WorldComponentPoolsCacheSize];
+            Views = new GrowList<EcsView>(_config.ViewCacheSize);
 
             Entities = new EntityData[_config.WorldEntitiesCacheSize];
             FreeEntityIds = new GrowList<int>(_config.WorldEntitiesCacheSize);
@@ -56,6 +58,33 @@ namespace KanMach.Core.Ecs
 
             return entity;
         }
+        public void Recycle(ref EntityData entityData)
+        {
+            FreeEntityIds.Add(entityData.Id);
+        }
+
+        public T View<T>() where T : EcsView
+        {
+            for (int i = 0; i < Views.Index; i++)
+            {
+                if (Views.Items[i].GetType() != typeof(T)) continue;
+
+                return (T)Views.Items[i];
+            }
+
+            var view = Activator.CreateInstance(typeof(T), this);
+            
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void RemoveComponentsFromView(int typeId, in Entity entity, in EntityData entityData)
+        {
+
+        }
+        internal void AddComponentsToView(int typeId, in Entity entity, in EntityData entityData)
+        {
+
+        }
 
         internal ComponentPool<T> GetPool<T>() where T : struct
         {
@@ -77,11 +106,6 @@ namespace KanMach.Core.Ecs
             }
 
             return (ComponentPool<T>) pool;
-        }
-
-        public void Recycle(ref EntityData entityData)
-        {
-            FreeEntityIds.Add(entityData.Id);
         }
 
     }

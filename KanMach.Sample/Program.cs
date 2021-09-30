@@ -22,7 +22,6 @@ namespace KanMach.Sample
             testStruct.Counter = 1;
 
             var hasStruct = entity.Has<TestStruct>();
-            var testStruct1 = entity.Get<TestStruct>();
 
         }
     }
