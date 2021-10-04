@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace KanMach.Core.Ecs
 {
-    public struct Entity : IEquatable<Entity>
+    public struct EntityData
     {
 
         public int Id;
-
         public int Gen;
+
+        public int[] ComponentIds;
+        public int[] ComponentTypes;
+        public int ComponentIndex;
 
         public EcsWorld World;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Entity other) => Id == other.Id && Gen == other.Gen;
     }
 }
