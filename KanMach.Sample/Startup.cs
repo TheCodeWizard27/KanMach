@@ -1,4 +1,5 @@
 ﻿using KanMach.Core.Interfaces;
+using KanMach.Veldrid;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace KanMach.Sample
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            
+            var vs = new VeldridService();
         }
     }
 }
