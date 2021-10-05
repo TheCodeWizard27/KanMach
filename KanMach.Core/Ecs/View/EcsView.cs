@@ -20,8 +20,8 @@ namespace KanMach.Core.Ecs.View
         protected Entity[] Entities;
         protected readonly Dictionary<int, int> EntitiesMap;
 
-        protected int[] IncludedTypeIndices;
-        protected int[] ExcludedTypeIndices;
+        internal protected int[] IncludedTypeIndices;
+        internal protected int[] ExcludedTypeIndices;
 
         public Type[] IncludedTypes;
         public Type[] ExcludedTypes;
