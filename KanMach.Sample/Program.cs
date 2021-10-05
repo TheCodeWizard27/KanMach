@@ -1,6 +1,7 @@
 ﻿using KanMach.Core;
 using KanMach.Core.Ecs;
 using KanMach.Core.Ecs.Extensions;
+using KanMach.Core.Ecs.View;
 using System;
 
 namespace KanMach.Sample
@@ -22,6 +23,8 @@ namespace KanMach.Sample
             testStruct.Counter = 1;
 
             var hasStruct = entity.Has<TestStruct>();
+
+            world.View<EcsView<TestStruct>.Exclude<TestStruct>>();
 
         }
     }
