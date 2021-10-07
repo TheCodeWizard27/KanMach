@@ -1,4 +1,5 @@
 ﻿using KanMach.Core.Ecs.Interfaces;
+using KanMach.Core.Ecs.View;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,10 @@ namespace KanMach.Core.Ecs
         internal EcsConfig Config;
 
         internal IComponentPool[] ComponentPools;
+        
         internal GrowList<EcsView> Views;
+        internal Dictionary<int, GrowList<EcsView>> ViewIncludesMap;
+        internal Dictionary<int, GrowList<EcsView>> ViewExcludesMap;
 
         internal GrowList<int> FreeEntityIds;
         internal EntityData[] Entities;
@@ -21,13 +25,16 @@ namespace KanMach.Core.Ecs
 
         public EcsWorld(EcsConfig config = null)
         {
-            _config = config ?? EcsConfig.Default;
+            Config = config ?? EcsConfig.Default;
 
-            ComponentPools = new IComponentPool[_config.WorldComponentPoolsCacheSize];
-            Views = new GrowList<EcsView>(_config.ViewCacheSize);
+            ComponentPools = new IComponentPool[Config.WorldComponentPoolsCacheSize];
+            
+            Views = new GrowList<EcsView>(Config.ViewCacheSize);
+            ViewIncludesMap = new Dictionary<int, GrowList<EcsView>>(Config.EntityComponentCacheSize);
+            ViewExcludesMap = new Dictionary<int, GrowList<EcsView>>(Config.EntityComponentCacheSize);
 
-            Entities = new EntityData[_config.WorldEntitiesCacheSize];
-            FreeEntityIds = new GrowList<int>(_config.WorldEntitiesCacheSize);
+            Entities = new EntityData[Config.WorldEntitiesCacheSize];
+            FreeEntityIds = new GrowList<int>(Config.WorldEntitiesCacheSize);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,8 +59,8 @@ namespace KanMach.Core.Ecs
                 }
                 entity.Id = EntityIndex++;
                 ref var entityData = ref Entities[entity.Id];
-                entityData.ComponentIds = new int[_config.EntityComponentCacheSize];
-                entityData.ComponentTypes = new int[_config.EntityComponentCacheSize];
+                entityData.ComponentIds = new int[Config.EntityComponentCacheSize];
+                entityData.ComponentTypes = new int[Config.EntityComponentCacheSize];
             }
 
             return entity;
@@ -67,13 +74,39 @@ namespace KanMach.Core.Ecs
         {
             for (int i = 0; i < Views.Index; i++)
             {
+                // Return already existing view.
                 if (Views.Items[i].GetType() != typeof(T)) continue;
 
                 return (T)Views.Items[i];
             }
 
-            var view = Activator.CreateInstance(typeof(T), this);
-            
+            var view = (T) Activator.CreateInstance(typeof(T), this);
+
+            Views.Add(view);
+
+            for(var i = 0; i < view.IncludedTypeIndices.Length; i++)
+            {
+                if(!ViewIncludesMap.TryGetValue(view.IncludedTypeIndices[i], out var views))
+                {
+                    views = new GrowList<EcsView>(Config.ViewCacheSize);
+                    ViewIncludesMap[view.IncludedTypeIndices[i]] = views;
+                }
+                views.Add(view);
+            }
+            if(view.ExcludedTypeIndices != null)
+            {
+                for(var i = 0; i < view.ExcludedTypeIndices.Length; i++)
+                {
+                    if(!ViewExcludesMap.TryGetValue(view.ExcludedTypeIndices[i], out var views))
+                    {
+                        views = new GrowList<EcsView>(Config.ViewCacheSize);
+                        ViewExcludesMap[view.ExcludedTypeIndices[i]] = views;
+                    }
+                    views.Add(view);
+                }
+            }
+
+            return view;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,11 +119,14 @@ namespace KanMach.Core.Ecs
 
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ComponentPool<T> GetPool<T>() where T : struct
         {
             var typeId = ComponentType<T>.TypeId;
             if(ComponentPools.Length < typeId)
             {
+                // Increase size of ComponentPools buffer till it can store
+                // every component type.
                 var len = ComponentPools.Length *1;
                 while (len <= typeId)
                 {
