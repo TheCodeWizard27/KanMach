@@ -3,21 +3,24 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace KanMach.Core.Ecs.View
 {
 
-    // TODO Add on "OnAdd" and "OnRemove" functions probably rename to "Add" and "Remove" because they are not events.
     public abstract class EcsView
     {
 
-        private ViewOperation[] _delayedOperations;
+        private bool _lock;
+        private GrowList<ViewOperation> _delayedOperations;
 
         protected EcsWorld World;
 
         protected Entity[] Entities;
+        protected int EntitiesIndex;
+
         protected readonly Dictionary<int, int> EntitiesMap;
 
         internal protected int[] IncludedTypeIndices;
@@ -31,7 +34,142 @@ namespace KanMach.Core.Ecs.View
             World = world;
             Entities = new Entity[world.Config.ViewEntityCacheSize];
             EntitiesMap = new Dictionary<int, int>(world.Config.ViewEntityCacheSize);
-            _delayedOperations = new ViewOperation[world.Config.ViewEntityCacheSize];
+            _delayedOperations = new GrowList<ViewOperation>(world.Config.ViewEntityCacheSize);
+        }
+
+        /// <summary>
+        /// Checks if Entity is compatible
+        /// </summary>
+        /// <param name="entityData"></param>
+        /// <param name="typeIndex">
+        ///     Pass typeIndex of Componetn for optimized compatibility checks.
+        ///     Type index is -/+ depending on if the Component got added or removed.
+        /// </param>
+        /// <returns></returns>
+        internal bool IsCompatible(in EntityData entityData, int modifiedType = 0)
+        {
+            var includeIndex = IncludedTypeIndices.Length - 1;
+            for(;includeIndex >= 0; includeIndex--)
+            {
+                var includedType = IncludedTypeIndices[includeIndex];
+
+                var componentIndex = entityData.ComponentIndex - 1;
+                for (; componentIndex >= 0; componentIndex--) 
+                {
+                    var type = entityData.ComponentTypes[componentIndex];
+                    if(type == -modifiedType)
+                    {
+                        continue;
+                    }
+                    if(type == modifiedType || type  == includedType)
+                    {
+                        break;
+                    }
+                }
+
+                if(componentIndex == -1)
+                {
+                    // Component not found.
+                    break;
+                }
+            }
+
+            if(includeIndex != -1)
+            {
+                // Not all included Components where found.
+                return false;
+            }
+
+            if(ExcludedTypeIndices != null)
+            {
+                for(var i = 0; i < ExcludedTypeIndices.Length; i++)
+                {
+                    var excludedType = ExcludedTypeIndices[i];
+                    for(var typeIndex = 0; typeIndex < entityData.ComponentIndex; typeIndex++)
+                    {
+                        var type = entityData.ComponentTypes[typeIndex];
+                        if (type == -modifiedType)
+                        {
+                            continue;
+                        }
+                        if (type == modifiedType || type == excludedType)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public abstract void AddEntity(in Entity entity);
+        public abstract void RemoveEntity(in Entity entity);
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        protected bool TryBufferingOperationIfLocked(bool isAddOperation, Entity entity)
+        {
+            if (!_lock) return false;
+
+            _delayedOperations.Add();
+            ref var operation = ref _delayedOperations.Items[_delayedOperations.Index];
+            operation.IsAddAction = isAddOperation;
+            operation.Entity = entity;
+
+            return true;
+        }
+
+        protected void Lock()
+        {
+            _lock = true;
+        }
+        protected void Unlock()
+        {
+            _lock = false;
+            while(_delayedOperations.Index > 0)
+            {
+                var operation = _delayedOperations.Take();
+                if(operation.IsAddAction)
+                {
+                    AddEntity(operation.Entity);
+                } else
+                {
+                    RemoveEntity(operation.Entity);
+                }
+            }
+        }
+
+        public struct Enumerator : IDisposable
+        {
+            readonly EcsView _view;
+            readonly private int _count;
+            private int _index;
+
+            public int Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _index;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal Enumerator(EcsView view)
+            {
+                _view = view;
+                _count = _view.EntitiesIndex;
+                _index = -1;
+                _view.Lock();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Dispose() => _view.Unlock();
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext() => ++_index < _count;
+
         }
 
     }
@@ -51,8 +189,54 @@ namespace KanMach.Core.Ecs.View
             IncludedTypes = new[] { typeof(Inc) };
 
             _pool = world.GetPool<Inc>();
+            _pool.OnResize += _pool_OnResize;
             _incComponents = _pool.Components;
             _get = new int[world.Config.ViewEntityCacheSize];
+        }
+
+        public override void AddEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(true, entity)) return;
+            if(Entities.Length == EntitiesIndex)
+            {
+                var newLength = EntitiesIndex * 2;
+                Array.Resize(ref Entities, newLength);
+                Array.Resize(ref _get, newLength);
+            }
+
+            ref var entityData = ref entity.World.GetEntityData(entity);
+            for (int i = 0, left = 1;left > 0 && i < entityData.ComponentIndex; i++) {
+                if(entityData.ComponentTypes[i] == ComponentType<Inc>.TypeId)
+                {
+                    _get[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                }
+            }
+
+            EntitiesMap[entity.Id] = EntitiesIndex;
+            Entities[EntitiesIndex++] = entity;
+        }
+
+        public override void RemoveEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(false, entity)) return;
+            var id = EntitiesMap[entity.Id];
+            EntitiesMap.Remove(entity.Id);
+            EntitiesIndex--;
+
+            //Replace removed entity with newest one.
+            if(id < EntitiesIndex)
+            {
+                Entities[id] = Entities[EntitiesIndex];
+                EntitiesMap[Entities[id].Id] = id;
+
+                _get[id] = _get[EntitiesIndex];
+            }
+        }
+
+        private void _pool_OnResize()
+        {
+            _incComponents = _pool.Components;
         }
 
         public class Exclude<Exc> : EcsView<Inc>
@@ -113,11 +297,68 @@ namespace KanMach.Core.Ecs.View
             };
 
             _pool1 = world.GetPool<Inc1>();
+            _pool1.OnResize += _pool_OnResize;
             _pool2 = world.GetPool<Inc2>();
+            _pool2.OnResize += _pool_OnResize;
             _incComponents1 = _pool1.Components;
             _incComponents2 = _pool2.Components;
             _get1 = new int[world.Config.ViewEntityCacheSize];
             _get2 = new int[world.Config.ViewEntityCacheSize];
+        }
+
+        public override void AddEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(true, entity)) return;
+            if (Entities.Length == EntitiesIndex)
+            {
+                var newLength = EntitiesIndex * 2;
+                Array.Resize(ref Entities, newLength);
+                Array.Resize(ref _get1, newLength);
+                Array.Resize(ref _get2, newLength);
+            }
+
+            ref var entityData = ref entity.World.GetEntityData(entity);
+            for (int i = 0, left = 2; left > 0 && i < entityData.ComponentIndex; i++)
+            {
+                if (entityData.ComponentTypes[i] == ComponentType<Inc1>.TypeId)
+                {
+                    _get1[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                    continue;
+                }
+                if (entityData.ComponentTypes[i] == ComponentType<Inc2>.TypeId)
+                {
+                    _get2[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                }
+            }
+
+            EntitiesMap[entity.Id] = EntitiesIndex;
+            Entities[EntitiesIndex++] = entity;
+        }
+
+        public override void RemoveEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(false, entity)) return;
+            var id = EntitiesMap[entity.Id];
+            EntitiesMap.Remove(entity.Id);
+            EntitiesIndex--;
+
+            //Replace removed entity with newest one.
+            if (id < EntitiesIndex)
+            {
+                Entities[id] = Entities[EntitiesIndex];
+                EntitiesMap[Entities[id].Id] = id;
+
+                _get1[id] = _get1[EntitiesIndex];
+                _get2[id] = _get2[EntitiesIndex];
+            }
+        }
+
+        private void _pool_OnResize()
+        {
+            _incComponents1 = _pool1.Components;
+            _incComponents2 = _pool2.Components;
         }
 
         public class Exclude<Exc> : EcsView<Inc1, Inc2>
@@ -165,6 +406,7 @@ namespace KanMach.Core.Ecs.View
 
         public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
         public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
+        public ref Inc3 Get3(in int id) => ref _incComponents3[_get3[id]];
 
         public EcsView(EcsWorld world) : base(world)
         {
@@ -180,14 +422,241 @@ namespace KanMach.Core.Ecs.View
             };
 
             _pool1 = world.GetPool<Inc1>();
+            _pool1.OnResize += _pool_OnResize;
             _pool2 = world.GetPool<Inc2>();
+            _pool2.OnResize += _pool_OnResize;
             _pool3 = world.GetPool<Inc3>();
+            _pool3.OnResize += _pool_OnResize;
             _incComponents1 = _pool1.Components;
             _incComponents2 = _pool2.Components;
             _incComponents3 = _pool3.Components;
             _get1 = new int[world.Config.ViewEntityCacheSize];
             _get2 = new int[world.Config.ViewEntityCacheSize];
             _get3 = new int[world.Config.ViewEntityCacheSize];
+        }
+
+        public override void AddEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(true, entity)) return;
+            if (Entities.Length == EntitiesIndex)
+            {
+                var newLength = EntitiesIndex * 2;
+                Array.Resize(ref Entities, newLength);
+                Array.Resize(ref _get1, newLength);
+                Array.Resize(ref _get2, newLength);
+                Array.Resize(ref _get3, newLength);
+            }
+
+            ref var entityData = ref entity.World.GetEntityData(entity);
+            for (int i = 0, left = 3; left > 0 && i < entityData.ComponentIndex; i++)
+            {
+                if (entityData.ComponentTypes[i] == ComponentType<Inc1>.TypeId)
+                {
+                    _get1[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                    continue;
+                }
+                if (entityData.ComponentTypes[i] == ComponentType<Inc2>.TypeId)
+                {
+                    _get2[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                    continue;
+                }
+                if (entityData.ComponentTypes[i] == ComponentType<Inc3>.TypeId)
+                {
+                    _get3[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                }
+            }
+
+            EntitiesMap[entity.Id] = EntitiesIndex;
+            Entities[EntitiesIndex++] = entity;
+        }
+
+        public override void RemoveEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(false, entity)) return;
+            var id = EntitiesMap[entity.Id];
+            EntitiesMap.Remove(entity.Id);
+            EntitiesIndex--;
+
+            //Replace removed entity with newest one.
+            if (id < EntitiesIndex)
+            {
+                Entities[id] = Entities[EntitiesIndex];
+                EntitiesMap[Entities[id].Id] = id;
+
+                _get1[id] = _get1[EntitiesIndex];
+                _get2[id] = _get2[EntitiesIndex];
+                _get3[id] = _get3[EntitiesIndex];
+            }
+        }
+
+        private void _pool_OnResize()
+        {
+            _incComponents1 = _pool1.Components;
+            _incComponents2 = _pool2.Components;
+            _incComponents3 = _pool3.Components;
+        }
+
+        public class Exclude<Exc> : EcsView<Inc1, Inc2, Inc3>
+            where Exc : struct
+        {
+            public Exclude(EcsWorld world) : base(world)
+            {
+                ExcludedTypeIndices = new[] { ComponentType<Exc>.TypeId };
+                ExcludedTypes = new[] { typeof(Exc) };
+            }
+        }
+        public class Exclude<Exc1, Exc2> : Exclude<Exc1>
+            where Exc1 : struct
+            where Exc2 : struct
+        {
+            public Exclude(EcsWorld world) : base(world)
+            {
+                ExcludedTypeIndices = new[] {
+                    ComponentType<Exc1>.TypeId,
+                    ComponentType<Exc2>.TypeId
+                };
+                ExcludedTypes = new[] {
+                    typeof(Exc1),
+                    typeof(Exc2)
+                };
+            }
+        }
+    }
+
+    public class EcsView<Inc1, Inc2, Inc3, Inc4> : EcsView<Inc1, Inc2>
+        where Inc1 : struct
+        where Inc2 : struct
+        where Inc3 : struct
+        where Inc4 : struct
+    {
+        private int[] _get1;
+        private int[] _get2;
+        private int[] _get3;
+        private int[] _get4;
+
+        private readonly ComponentPool<Inc1> _pool1;
+        private readonly ComponentPool<Inc2> _pool2;
+        private readonly ComponentPool<Inc3> _pool3;
+        private readonly ComponentPool<Inc4> _pool4;
+
+        private Inc1[] _incComponents1;
+        private Inc2[] _incComponents2;
+        private Inc3[] _incComponents3;
+        private Inc4[] _incComponents4;
+
+        public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
+        public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
+        public ref Inc3 Get3(in int id) => ref _incComponents3[_get3[id]];
+        public ref Inc4 Get4(in int id) => ref _incComponents4[_get4[id]];
+
+        public EcsView(EcsWorld world) : base(world)
+        {
+            IncludedTypeIndices = new[] {
+                ComponentType<Inc1>.TypeId,
+                ComponentType<Inc2>.TypeId,
+                ComponentType<Inc3>.TypeId,
+                ComponentType<Inc4>.TypeId
+            };
+            IncludedTypes = new[] {
+                typeof(Inc1),
+                typeof(Inc2),
+                typeof(Inc3),
+                typeof(Inc4)
+            };
+
+            _pool1 = world.GetPool<Inc1>();
+            _pool1.OnResize += _pool_OnResize;
+            _pool2 = world.GetPool<Inc2>();
+            _pool2.OnResize += _pool_OnResize;
+            _pool3 = world.GetPool<Inc3>();
+            _pool3.OnResize += _pool_OnResize;
+            _pool4 = world.GetPool<Inc4>();
+            _pool4.OnResize += _pool_OnResize;
+
+            _incComponents1 = _pool1.Components;
+            _incComponents2 = _pool2.Components;
+            _incComponents3 = _pool3.Components;
+            _incComponents4 = _pool4.Components;
+
+            _get1 = new int[world.Config.ViewEntityCacheSize];
+            _get2 = new int[world.Config.ViewEntityCacheSize];
+            _get3 = new int[world.Config.ViewEntityCacheSize];
+            _get4 = new int[world.Config.ViewEntityCacheSize];
+        }
+
+        public override void AddEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(true, entity)) return;
+            if (Entities.Length == EntitiesIndex)
+            {
+                var newLength = EntitiesIndex * 2;
+                Array.Resize(ref Entities, newLength);
+                Array.Resize(ref _get1, newLength);
+                Array.Resize(ref _get2, newLength);
+                Array.Resize(ref _get3, newLength);
+                Array.Resize(ref _get4, newLength);
+            }
+
+            ref var entityData = ref entity.World.GetEntityData(entity);
+            for (int i = 0, left = 4; left > 0 && i < entityData.ComponentIndex; i++)
+            {
+                if (entityData.ComponentTypes[i] == ComponentType<Inc1>.TypeId)
+                {
+                    _get1[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                    continue;
+                }
+                if (entityData.ComponentTypes[i] == ComponentType<Inc2>.TypeId)
+                {
+                    _get2[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                    continue;
+                }
+                if (entityData.ComponentTypes[i] == ComponentType<Inc3>.TypeId)
+                {
+                    _get3[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                }
+                if (entityData.ComponentTypes[i] == ComponentType<Inc4>.TypeId)
+                {
+                    _get4[EntitiesIndex] = entityData.ComponentIds[i];
+                    left--;
+                }
+            }
+
+            EntitiesMap[entity.Id] = EntitiesIndex;
+            Entities[EntitiesIndex++] = entity;
+        }
+
+        public override void RemoveEntity(in Entity entity)
+        {
+            if (TryBufferingOperationIfLocked(false, entity)) return;
+            var id = EntitiesMap[entity.Id];
+            EntitiesMap.Remove(entity.Id);
+            EntitiesIndex--;
+
+            //Replace removed entity with newest one.
+            if (id < EntitiesIndex)
+            {
+                Entities[id] = Entities[EntitiesIndex];
+                EntitiesMap[Entities[id].Id] = id;
+
+                _get1[id] = _get1[EntitiesIndex];
+                _get2[id] = _get2[EntitiesIndex];
+                _get3[id] = _get3[EntitiesIndex];
+                _get4[id] = _get4[EntitiesIndex];
+            }
+        }
+
+        private void _pool_OnResize()
+        {
+            _incComponents1 = _pool1.Components;
+            _incComponents2 = _pool2.Components;
+            _incComponents3 = _pool3.Components;
+            _incComponents4 = _pool4.Components;
         }
 
         public class Exclude<Exc> : EcsView<Inc1, Inc2, Inc3>

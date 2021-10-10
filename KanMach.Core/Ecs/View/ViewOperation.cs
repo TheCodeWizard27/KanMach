@@ -8,5 +8,7 @@ namespace KanMach.Core.Ecs.View
 {
     internal struct ViewOperation
     {
+        public Entity Entity;
+        public bool IsAddAction;
     }
 }

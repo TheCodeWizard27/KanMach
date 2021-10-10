@@ -106,17 +106,74 @@ namespace KanMach.Core.Ecs
                 }
             }
 
+            // Add already existing Entities.
+            Entity entity;
+            entity.World = this;
+            for(int i = 0; i < EntityIndex; i++)
+            {
+                ref var entityData = ref Entities[i];
+                if (entityData.ComponentIndex > 0 && view.IsCompatible(entityData, 0))
+                {
+                    entity.Id = i;
+                    entity.Gen = entityData.Gen;
+                    view.AddEntity(entity);
+                }
+            }
+
             return view;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void RemoveComponentsFromView(int typeId, in Entity entity, in EntityData entityData)
         {
+            GrowList<EcsView> views;
 
+            if (ViewIncludesMap.TryGetValue(typeId, out views))
+            {
+                for (int i = 0; i < views.Index; i++)
+                {
+                    if (views.Items[i].IsCompatible(entityData))
+                    {
+                        views.Items[i].RemoveEntity(entity);
+                    }
+                }
+            }
+            if (ViewExcludesMap.TryGetValue(typeId, out views))
+            {
+                for (int i = 0; i < views.Index; i++)
+                {
+                    if (views.Items[i].IsCompatible(entityData, typeId))
+                    {
+                        views.Items[i].AddEntity(entity);
+                    }
+                }
+            }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AddComponentsToView(int typeId, in Entity entity, in EntityData entityData)
         {
+            GrowList<EcsView> views;
 
+            if (ViewIncludesMap.TryGetValue(typeId, out views))
+            {
+                for (int i = 0; i < views.Index; i++)
+                {
+                    if (views.Items[i].IsCompatible(entityData, 0))
+                    {
+                        views.Items[i].AddEntity(entity);
+                    }
+                }
+            }
+            if (ViewExcludesMap.TryGetValue(typeId, out views))
+            {
+                for (int i = 0; i < views.Index; i++)
+                {
+                    if (views.Items[i].IsCompatible(entityData, -typeId))
+                    {
+                        views.Items[i].RemoveEntity(entity);
+                    }
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
