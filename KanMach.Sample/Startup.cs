@@ -13,7 +13,7 @@ namespace KanMach.Sample
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            var vs = new VeldridService();
+           
         }
     }
 }

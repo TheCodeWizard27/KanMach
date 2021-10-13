@@ -22,7 +22,7 @@ namespace KanMach.Veldrid.Components
         public MachShader(ResourceFactory factory, DeviceBuffer modelBuffer, DeviceBuffer viewBuffer, DeviceBuffer projectionBuffer)
         {
             VertexCode = File.ReadAllText(@"Shaders/BaseVertexShader.vert");
-            FragmentCode = File.ReadAllText(@"Shaders/BaseFragmentShader.vert");
+            FragmentCode = File.ReadAllText(@"Shaders/BaseFragmentShader.frag");
 
             shaderSet = new ShaderSetDescription(
                 new[]
@@ -32,36 +32,29 @@ namespace KanMach.Veldrid.Components
                 },
                 factory.CreateFromSpirv(
                     new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexCode), "main"),
-                    new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(FragmentCode), "main")
-                ));
+                    new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(FragmentCode), "main")));
 
             modelLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ModelBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-                )
-            );
+                        new ResourceLayoutElementDescription("ModelBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
             vertexLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
-                    new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-                )
-            );
+                        new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                        new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                        ));
 
             modelSet = factory.CreateResourceSet(
                 new ResourceSetDescription(
                     modelLayout,
-                    modelBuffer
-                )
-            );
+                    modelBuffer));
 
             vertexSet = factory.CreateResourceSet(
                 new ResourceSetDescription(
                     vertexLayout,
                     viewBuffer,
                     projectionBuffer
-                )
-            );
+                    ));
         }
     }
 }

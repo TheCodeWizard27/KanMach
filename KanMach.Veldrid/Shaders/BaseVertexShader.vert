@@ -20,9 +20,10 @@ layout(set = 1, binding = 1) uniform ProjectionBuffer
 layout(location = 0) in vec3 Position;
 
 void main()
-
+{
     vec4 modelPosition = Model * vec4(Position, 1);
     vec4 viewPosition = View * modelPosition;
-    vec4 clipPosition = Projection * viewPosition;
-    gl_Position = clipPosition;
+    vec4 projPosition = Projection * viewPosition;
+    gl_Position = projPosition;
+
 }

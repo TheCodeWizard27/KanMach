@@ -22,7 +22,7 @@ namespace KanMach.Veldrid.Components
                     ),
                 new RasterizerStateDescription(
                     cullMode: FaceCullMode.Back,
-                    fillMode: PolygonFillMode.Wireframe,
+                    fillMode: PolygonFillMode.Solid,
                     frontFace: FrontFace.Clockwise,
                     depthClipEnabled: false,
                     scissorTestEnabled: false
@@ -30,9 +30,7 @@ namespace KanMach.Veldrid.Components
                 PrimitiveTopology.TriangleList,
                 shader.shaderSet,
                 new[] { shader.modelLayout, shader.vertexLayout },
-                graphicsDevice.MainSwapchain.Framebuffer.OutputDescription
-                ));
-
+                graphicsDevice.MainSwapchain.Framebuffer.OutputDescription));
         }
     }
 }

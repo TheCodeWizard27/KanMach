@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Veldrid;
 
 namespace KanMach.Veldrid.Model.Src
 {
@@ -13,37 +14,36 @@ namespace KanMach.Veldrid.Model.Src
         public static Vector3[] GetCubeVertices()
         {
             Vector3[] vertices =
-            {
-                // Top
+           {
                 new Vector3(-0.5f, +0.5f, -0.5f),
-                new Vector3(+0.5f, +0.5f, -0.5f),
-                new Vector3(+0.5f, +0.5f, +0.5f),
-                new Vector3(-0.5f, +0.5f, +0.5f),
-                // Bottom                                                        
-                new Vector3(-0.5f, -0.5f, +0.5f),
-                new Vector3(+0.5f, -0.5f, +0.5f),
-                new Vector3(+0.5f, -0.5f, -0.5f),
-                new Vector3(-0.5f, -0.5f, -0.5f),
-                // Left                                                          
-                new Vector3(-0.5f, +0.5f, -0.5f),
-                new Vector3(-0.5f, +0.5f, +0.5f),
-                new Vector3(-0.5f, -0.5f, +0.5f),
-                new Vector3(-0.5f, -0.5f, -0.5f),
-                // Right                                                         
-                new Vector3(+0.5f, +0.5f, +0.5f),
-                new Vector3(+0.5f, +0.5f, -0.5f),
-                new Vector3(+0.5f, -0.5f, -0.5f),
-                new Vector3(+0.5f, -0.5f, +0.5f),
-                // Back                                                          
-                new Vector3(+0.5f, +0.5f, -0.5f),
-                new Vector3(-0.5f, +0.5f, -0.5f),
-                new Vector3(-0.5f, -0.5f, -0.5f),
-                new Vector3(+0.5f, -0.5f, -0.5f),
-                // Front                                                         
-                new Vector3(-0.5f, +0.5f, +0.5f),
-                new Vector3(+0.5f, +0.5f, +0.5f),
-                new Vector3(+0.5f, -0.5f, +0.5f),
-                new Vector3(-0.5f, -0.5f, +0.5f)
+                new Vector3(+0.5f, +0.5f, -0.5f), 
+                new Vector3(+0.5f, +0.5f, +0.5f), 
+                new Vector3(-0.5f, +0.5f, +0.5f), 
+                // Bottom                          
+                new Vector3(-0.5f,-0.5f, +0.5f),  
+                new Vector3(+0.5f,-0.5f, +0.5f),  
+                new Vector3(+0.5f,-0.5f, -0.5f),  
+                new Vector3(-0.5f,-0.5f, -0.5f),  
+                // Left                            
+                new Vector3(-0.5f, +0.5f, -0.5f), 
+                new Vector3(-0.5f, +0.5f, +0.5f), 
+                new Vector3(-0.5f, -0.5f, +0.5f), 
+                new Vector3(-0.5f, -0.5f, -0.5f), 
+                // Right                           
+                new Vector3(+0.5f, +0.5f, +0.5f), 
+                new Vector3(+0.5f, +0.5f, -0.5f), 
+                new Vector3(+0.5f, -0.5f, -0.5f), 
+                new Vector3(+0.5f, -0.5f, +0.5f), 
+                // Back                            
+                new Vector3(+0.5f, +0.5f, -0.5f), 
+                new Vector3(-0.5f, +0.5f, -0.5f), 
+                new Vector3(-0.5f, -0.5f, -0.5f), 
+                new Vector3(+0.5f, -0.5f, -0.5f), 
+                // Front                           
+                new Vector3(-0.5f, +0.5f, +0.5f), 
+                new Vector3(+0.5f, +0.5f, +0.5f), 
+                new Vector3(+0.5f, -0.5f, +0.5f), 
+                new Vector3(-0.5f, -0.5f, +0.5f), 
             };
             return vertices;
         }

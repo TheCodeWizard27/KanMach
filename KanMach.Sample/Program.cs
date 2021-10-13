@@ -2,6 +2,7 @@
 using KanMach.Core.Ecs;
 using KanMach.Core.Ecs.Extensions;
 using KanMach.Core.Ecs.View;
+using KanMach.Veldrid;
 using System;
 
 namespace KanMach.Sample
@@ -26,6 +27,7 @@ namespace KanMach.Sample
 
             world.View<EcsView<TestStruct>.Exclude<TestStruct>>();
 
+            var vs = new VeldridService();
         }
     }
 }
