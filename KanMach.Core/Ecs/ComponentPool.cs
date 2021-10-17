@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace KanMach.Core.Ecs
 {
 
-    class ComponentPool<T> : IComponentPool where T : struct
+    public class ComponentPool<T> : IComponentPool where T : struct
     {
 
         public T[] Components;
@@ -17,6 +17,9 @@ namespace KanMach.Core.Ecs
         public GrowList<int> _freeComponents;
 
         public Type ItemType => typeof(T);
+
+        public delegate void OnResizeHandler();
+        public event OnResizeHandler OnResize;
 
         public ComponentPool()
         {
@@ -43,6 +46,7 @@ namespace KanMach.Core.Ecs
             if(Components.Length == id)
             {
                 Array.Resize(ref Components, ComponentIndex * 2);
+                OnResize?.Invoke();
             }
             ComponentIndex++;
             return id;

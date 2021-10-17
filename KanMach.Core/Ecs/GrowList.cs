@@ -25,6 +25,26 @@ namespace KanMach.Core.Ecs
             _items = new T[capacity];
         }
 
+        /// <summary>
+        /// Adds an empty Item to the grow list.
+        /// Array will be automatically rezised.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Add()
+        {
+            if (Items.Length == Index)
+            {
+                Array.Resize(ref _items, Items.Length * 2);
+            }
+            Index++;
+        }
+
+        /// <summary>
+        /// Adds passed Item to the grow list.
+        /// Array will be automatically rezised.
+        /// </summary>
+        /// <param name="item"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T item)
         {
             if(Items.Length == Index)

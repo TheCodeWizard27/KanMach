@@ -34,6 +34,8 @@ namespace KanMach.Core.Ecs.Extensions
             entityData.ComponentIds[entityData.ComponentIndex] = id;
             entityData.ComponentIndex++;
 
+            entity.World.AddComponentsToView(typeId, entity, entityData);
+
             return ref componentPool.GetItem(id);
         }
 
@@ -59,6 +61,8 @@ namespace KanMach.Core.Ecs.Extensions
             {
                 if (entityData.ComponentTypes[i] != typeId) continue;
 
+                entity.World.RemoveComponentsFromView(typeId, entity, entityData);
+
                 entity.World.ComponentPools[typeId].Recycle(i);
                 entityData.ComponentIndex--;
                 if(i < entityData.ComponentIndex)
@@ -77,6 +81,7 @@ namespace KanMach.Core.Ecs.Extensions
 
             for (var i = 0; i < entityData.ComponentIndex; i++)
             {
+                entity.World.RemoveComponentsFromView(entityData.ComponentTypes[i], entity, entityData);
                 entity.World.ComponentPools[entityData.ComponentTypes[i]].Recycle(entityData.ComponentIds[i]);
             }
             entityData.ComponentIndex = 0;
