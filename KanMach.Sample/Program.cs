@@ -2,6 +2,7 @@
 using KanMach.Core.Ecs;
 using KanMach.Core.Ecs.Extensions;
 using KanMach.Core.Ecs.View;
+using KanMach.Veldrid;
 using System;
 using System.Numerics;
 
@@ -56,8 +57,11 @@ namespace KanMach.Sample
                 var transform = view.GetTransform(id);
                 Console.WriteLine($"{{ x: {transform.Pos.X} \t\t| y: {transform.Pos.Y} \t\t| z: {transform.Pos.Z} }} \t\t[ Grounded: {transform.OnFloor} \t]");
             }
-
+          
+            var vs = new VeldridService();
+          
             Console.ReadLine();
+          
         }
     }
 }
