@@ -9,35 +9,33 @@ namespace KanMach.Veldrid.Graphics
 {
     class MachCamera
     {
-        public float _fov;
-        public float _near;
-        public float _far;
-        public int _width;
-        public int _height;
+        public float Fov;
+        public float Near;
+        public float Far;
+        public int Width;
+        public int Height;
 
-        public Vector3 _direction;
-        public Vector3 _position;
-        public Vector3 _target = new Vector3(0, 0, 0);
-        public Vector3 _cameraUp;
-        public Vector3 _cameraRight;
-
-        private Matrix4x4 _viewMatrix;
-        private Matrix4x4 _projectionMatrix;
+        public Vector3 Direction;
+        public Vector3 Position;
+        public Vector3 Target = new Vector3(0, 0, 0);
+        public Vector3 CameraUp;
+        public Vector3 CameraRight;
 
         public MachCamera(MachWindow mWindow)
         {
-            _position = new Vector3(0f, -1f, -2f);
-            _direction = Vector3.Normalize(_position - _target);
+            Position = new Vector3(0f, -1f, -2f);
+            Direction = Vector3.Normalize(Position - Target);
 
-            _near = 0.1F;
-            _far = 100F;
+            Near = 0.1F;
+            Far = 100F;
+            Fov = 1f;
 
-            _height = mWindow.window.Height;
-            _width = mWindow.window.Width;
+            Height = mWindow.window.Height;
+            Width = mWindow.window.Width;
 
             var up = new Vector3(0, 1, 0);
-            _cameraRight = Vector3.Cross(up, _direction);
-            _cameraUp = Vector3.Cross(_direction, _cameraRight);
+            CameraRight = Vector3.Cross(up, Direction);
+            CameraUp = Vector3.Cross(Direction, CameraRight);
 
         }
     } 

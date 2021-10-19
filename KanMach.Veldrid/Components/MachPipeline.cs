@@ -28,8 +28,8 @@ namespace KanMach.Veldrid.Components
                     scissorTestEnabled: false
                     ),
                 PrimitiveTopology.TriangleList,
-                shader.shaderSet,
-                new[] { shader.modelLayout, shader.vertexLayout },
+                shader.ShaderSet,
+                new[] { shader.ModelLayout, shader.VertexLayout },
                 graphicsDevice.MainSwapchain.Framebuffer.OutputDescription));
         }
     }

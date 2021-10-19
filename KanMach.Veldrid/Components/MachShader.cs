@@ -13,18 +13,18 @@ namespace KanMach.Veldrid.Components
     {
         private string VertexCode;
         private string FragmentCode;
-        public ShaderSetDescription shaderSet;
-        public ResourceLayout modelLayout;
-        public ResourceLayout vertexLayout;
-        public ResourceSet modelSet;
-        public ResourceSet vertexSet;
+        public ShaderSetDescription ShaderSet;
+        public ResourceLayout  ModelLayout;
+        public ResourceLayout VertexLayout;
+        public ResourceSet ModelSet;
+        public ResourceSet VertexSet;
 
         public MachShader(ResourceFactory factory, DeviceBuffer modelBuffer, DeviceBuffer viewBuffer, DeviceBuffer projectionBuffer)
         {
             VertexCode = File.ReadAllText(@"Shaders/BaseVertexShader.vert");
             FragmentCode = File.ReadAllText(@"Shaders/BaseFragmentShader.frag");
 
-            shaderSet = new ShaderSetDescription(
+            ShaderSet = new ShaderSetDescription(
                 new[]
                 {
                     new VertexLayoutDescription(
@@ -34,24 +34,24 @@ namespace KanMach.Veldrid.Components
                     new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexCode), "main"),
                     new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(FragmentCode), "main")));
 
-            modelLayout = factory.CreateResourceLayout(
+            ModelLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                         new ResourceLayoutElementDescription("ModelBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
-            vertexLayout = factory.CreateResourceLayout(
+            VertexLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                         new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                         new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
                         ));
 
-            modelSet = factory.CreateResourceSet(
+            ModelSet = factory.CreateResourceSet(
                 new ResourceSetDescription(
-                    modelLayout,
+                    ModelLayout,
                     modelBuffer));
 
-            vertexSet = factory.CreateResourceSet(
+            VertexSet = factory.CreateResourceSet(
                 new ResourceSetDescription(
-                    vertexLayout,
+                    VertexLayout,
                     viewBuffer,
                     projectionBuffer
                     ));

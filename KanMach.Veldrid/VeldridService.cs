@@ -79,16 +79,16 @@ namespace KanMach.Veldrid
         public void Draw()
         {
             _cl.Begin();
-
+            tick += 0.0001f;
             Matrix4x4 modelMatrix =
-                Matrix4x4.CreateTranslation(tick, 0, -0.01f)
+                Matrix4x4.CreateTranslation(0f, 0, -0.01f)
                 * Matrix4x4.CreateRotationX(0f)
                 * Matrix4x4.CreateRotationY(0f)
-                * Matrix4x4.CreateRotationZ(0f)
+                * Matrix4x4.CreateRotationZ(tick)
                 * Matrix4x4.CreateScale(1.0f);
 
-            Matrix4x4 lookAtMatrix = Matrix4x4.CreateLookAt(MachCamera._position, MachCamera._position - MachCamera._direction, MachCamera._cameraUp);
-            Matrix4x4 perspectiveMatrix = Matrix4x4.CreatePerspectiveFieldOfView(60.0f * (float)Math.PI / 180f, MachCamera._width / MachCamera._height, MachCamera._near, MachCamera._far);
+            Matrix4x4 lookAtMatrix = Matrix4x4.CreateLookAt(MachCamera.Position, MachCamera.Position - MachCamera.Direction, MachCamera.CameraUp);
+            Matrix4x4 perspectiveMatrix = Matrix4x4.CreatePerspectiveFieldOfView(MachCamera.Fov, MachCamera.Width / MachCamera.Height, MachCamera.Near, MachCamera.Far);
 
             _cl.UpdateBuffer(_modelBuffer, 0, ref modelMatrix);
             _cl.UpdateBuffer(_viewBuffer, 0, ref lookAtMatrix);
@@ -100,8 +100,8 @@ namespace KanMach.Veldrid
             _cl.ClearDepthStencil(1f);
 
             _cl.SetPipeline(_pipeline.Pipeline);
-            _cl.SetGraphicsResourceSet(0, _shader.modelSet);
-            _cl.SetGraphicsResourceSet(1, _shader.vertexSet);
+            _cl.SetGraphicsResourceSet(0, _shader.ModelSet);
+            _cl.SetGraphicsResourceSet(1, _shader.VertexSet);
             _cl.SetVertexBuffer(0, _vertexBuffer);
             _cl.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
 
