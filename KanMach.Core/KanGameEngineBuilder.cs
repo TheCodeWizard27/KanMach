@@ -47,8 +47,10 @@ namespace KanMach.Core
             }
             Logger ??= new KanLogger();
 
-            var context = new KanContext(serviceCollection.BuildServiceProvider());
+            var provider = serviceCollection.BuildServiceProvider();
+            var context = new KanContext(provider.CreateScope().ServiceProvider);
             var gameEngine = new KanGameEngine(Logger, context);
+            context._kanGameEngine = gameEngine;
 
             return gameEngine;
         }
