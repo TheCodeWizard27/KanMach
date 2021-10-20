@@ -23,9 +23,16 @@ namespace KanMach.Veldrid.AssetPrimitives.Serializers
                 reader.ReadByteArray());
         }
 
-        public override void WriteT(BinaryWriter writer, ProcessedTexture value)
+        public override void WriteT(BinaryWriter writer, ProcessedTexture ptd)
         {
-            throw new NotImplementedException();
+            writer.WriteEnum(ptd.Format);
+            writer.WriteEnum(ptd.Type);
+            writer.WriteEnum(ptd.Width);
+            writer.WriteEnum(ptd.Height);
+            writer.WriteEnum(ptd.Depth);
+            writer.WriteEnum(ptd.MipLevels);
+            writer.WriteEnum(ptd.ArrayLayers);
+            writer.WriteEnum(ptd.TextureData);
         }
     }
 }
