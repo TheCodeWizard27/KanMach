@@ -19,13 +19,9 @@ namespace KanMach.Core
         public IKanContext Context { get; set; }
         public KanGameController CurrentController { internal set; get; }
 
-        public KanGameEngine(
-            ILogger logger,
-            ServiceProvider provider
-            )
+        internal KanGameEngine(ILogger logger)
         {
             _logger = logger;
-            Context = new KanContext(provider.CreateScope().ServiceProvider);
         }
 
         public void Exit()

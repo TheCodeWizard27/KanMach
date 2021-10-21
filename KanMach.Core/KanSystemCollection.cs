@@ -55,7 +55,7 @@ namespace KanMach.Core
             configure?.Invoke(system);
             system.Init();
 
-            Systems.Sort((item, item2) => item.Priority);
+            Systems.Sort((item, item2) => item.Priority.CompareTo(item2.Priority));
 
             return system;
         }
