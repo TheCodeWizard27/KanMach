@@ -6,8 +6,7 @@ namespace KanMach.Core
 {
     public class KanContext : IKanContext
     {
-        internal KanGameEngine _kanGameEngine;
-
+        public KanGameEngine KanGameEngine { get; internal set; }
         public IServiceProvider Provider { get; private set; }
 
         internal KanContext(IServiceProvider serviceProvider)
@@ -15,9 +14,14 @@ namespace KanMach.Core
             Provider = serviceProvider;
         }
 
+        public IKanContext CreateNewScope()
+        {
+            return new KanContext(Provider.CreateScope().ServiceProvider);
+        }
+
         public void SwapController(KanGameController controller, bool keepOld = false)
         {
-            _kanGameEngine.SwapGameControllers(controller, keepOld);
+            KanGameEngine.SwapGameControllers(controller, keepOld);
         }
     }
 }

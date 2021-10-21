@@ -46,7 +46,6 @@ namespace KanMach.Veldrid
             _vertices = Cube.GetCubeVertices();
 
             CreateResources();
-
             while (MachWindow.window.Exists)
             {
                 MachWindow.window.PumpEvents();

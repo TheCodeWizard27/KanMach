@@ -11,6 +11,7 @@ namespace KanMach.Core.Interfaces
 
         public IServiceProvider Provider { get; }
 
+        public IKanContext CreateNewScope();
         public void SwapController(KanGameController controller, bool keepOld = false);
 
     }

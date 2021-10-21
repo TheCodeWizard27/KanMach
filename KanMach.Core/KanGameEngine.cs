@@ -10,16 +10,22 @@ namespace KanMach.Core
         private readonly ILogger _logger;
         private bool _run = true;
 
+        public delegate void OnUpdateHandler(TimeSpan delta);
+        public event OnUpdateHandler OnUpdate;
+
+        public delegate void OnExitHandler();
+        public event OnExitHandler OnExit;
+
         public IKanContext Context { get; set; }
         public KanGameController CurrentController { internal set; get; }
 
         public KanGameEngine(
             ILogger logger,
-            IKanContext context
+            ServiceProvider provider
             )
         {
             _logger = logger;
-            Context = context;
+            Context = new KanContext(provider.CreateScope().ServiceProvider);
         }
 
         public void Exit()
@@ -35,7 +41,7 @@ namespace KanMach.Core
 
         public void Run(KanGameController kanGameController)
         {
-            kanGameController.Context = Context;
+            kanGameController.Context = Context.CreateNewScope();
             kanGameController.Init();
             CurrentController = kanGameController;
 
@@ -48,11 +54,13 @@ namespace KanMach.Core
                 previous = current;
             }
 
+            OnExit?.Invoke();
             CurrentController.Dispose();
         }
 
         public void Update(TimeSpan delta)
         {
+            OnUpdate?.Invoke(delta);
             CurrentController?.Update(delta);
         }
 
@@ -64,7 +72,7 @@ namespace KanMach.Core
             }
 
             CurrentController = controller;
-            CurrentController.Context = new KanContext(Context.Provider.CreateScope().ServiceProvider);
+            CurrentController.Context = Context.CreateNewScope();
             CurrentController.Init();
         }
 

@@ -24,9 +24,6 @@ namespace KanMach.Veldrid.Graphics
                 WindowTitle = title
             };
             window = VeldridStartup.CreateWindow(ref windowCI);
-
-
-
         }
 
 
