@@ -2,9 +2,11 @@
 using KanMach.Veldrid.Graphics;
 using KanMach.Veldrid.Model;
 using KanMach.Veldrid.Model.Src;
+using KanMach.Veldrid.Util.Options;
 using System;
 using System.Numerics;
 using Veldrid;
+using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 
 namespace KanMach.Veldrid
@@ -13,6 +15,7 @@ namespace KanMach.Veldrid
     {
         private MachWindow MachWindow;
         private MachCamera MachCamera;
+        private MachOptions MachOptions;
         private GraphicsDevice _graphicsDevice;
         private CommandList _cl;
         private DeviceBuffer _modelBuffer;
@@ -25,31 +28,29 @@ namespace KanMach.Veldrid
         private Vector3[] _vertices;
         private ushort[] _indices;
         private float tick;
+        
 
 
-        public VeldridService()
+        public VeldridService(MachOptions mOpt)
         {
-            MachWindow = new MachWindow(100, 100, 960, 560, "KanMach");
+            ConfigureVeldrid(mOpt);
+        }
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(
-                debug: false,
-                swapchainDepthFormat: PixelFormat.R16_UNorm,
-                syncToVerticalBlank: false,
-                resourceBindingModel: ResourceBindingModel.Improved,
-                preferDepthRangeZeroToOne: true,
-                preferStandardClipSpaceYDirection: false
-            );
+        public void StartVeldridService()
+        {
+            MachWindow = new MachWindow(MachOptions);
 
-            _graphicsDevice = VeldridStartup.CreateGraphicsDevice(MachWindow.window, options);
+
+            _graphicsDevice = VeldridStartup.CreateGraphicsDevice(MachWindow, MachOptions.GDOpt);
             MachCamera = new MachCamera(MachWindow);
             _indices = Cube.GetCubeIndices();
             _vertices = Cube.GetCubeVertices();
 
             CreateResources();
 
-            while (MachWindow.window.Exists)
+            while (MachWindow.Exists)
             {
-                MachWindow.window.PumpEvents();
+                MachWindow.PumpEvents();
                 Draw();
             }
         }
@@ -76,7 +77,7 @@ namespace KanMach.Veldrid
 
         }
 
-        public void Draw()
+        private void Draw()
         {
             _cl.Begin();
             tick += 0.0001f;
@@ -118,13 +119,18 @@ namespace KanMach.Veldrid
             _graphicsDevice.WaitForIdle();
         }
 
-        public void DisposeResources()
+        private void DisposeResources()
         {
             _pipeline.Pipeline.Dispose();
             _cl.Dispose();
             _vertexBuffer.Dispose();
             _indexBuffer.Dispose();
             _graphicsDevice.Dispose();
+        }
+
+        public void ConfigureVeldrid(MachOptions mOpt)
+        {
+            MachOptions = mOpt;
         }
     }
 }

@@ -30,8 +30,8 @@ namespace KanMach.Veldrid.Graphics
             Far = 100F;
             Fov = 1f;
 
-            Height = mWindow.window.Height;
-            Width = mWindow.window.Width;
+            Height = mWindow.Height;
+            Width = mWindow.Width;
 
             var up = new Vector3(0, 1, 0);
             CameraRight = Vector3.Cross(up, Direction);
