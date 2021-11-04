@@ -3,6 +3,7 @@ using KanMach.Core.Ecs;
 using KanMach.Core.Ecs.Extensions;
 using KanMach.Core.Ecs.View;
 using KanMach.Veldrid;
+using KanMach.Veldrid.Util;
 using KanMach.Veldrid.Util.Options;
 using System;
 using System.Numerics;
@@ -31,10 +32,15 @@ namespace KanMach.Sample
         }
     }
 
+    
+
     class Program
     {
+        private readonly IVeldridService VeldridService;
+
         static void Main(string[] args)
         {
+
             var world = new EcsWorld();
             var rnd = new Random();
             
@@ -59,8 +65,8 @@ namespace KanMach.Sample
                 Console.WriteLine($"{{ x: {transform.Pos.X} \t\t| y: {transform.Pos.Y} \t\t| z: {transform.Pos.Z} }} \t\t[ Grounded: {transform.OnFloor} \t]");
             }
 
-            var mo = new MachOptions();
-            var vs = new VeldridService(mo);
+
+            
             vs.StartVeldridService();
           
             Console.ReadLine();

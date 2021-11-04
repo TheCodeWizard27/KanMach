@@ -2,6 +2,7 @@
 using KanMach.Veldrid.Graphics;
 using KanMach.Veldrid.Model;
 using KanMach.Veldrid.Model.Src;
+using KanMach.Veldrid.Util;
 using KanMach.Veldrid.Util.Options;
 using System;
 using System.Numerics;
@@ -11,7 +12,7 @@ using Veldrid.StartupUtilities;
 
 namespace KanMach.Veldrid
 {
-    public class VeldridService
+    public class VeldridService : IVeldridService
     {
         private MachWindow MachWindow;
         private MachCamera MachCamera;
@@ -31,12 +32,12 @@ namespace KanMach.Veldrid
         
 
 
-        public VeldridService(MachOptions mOpt)
+        public VeldridService()
         {
-            ConfigureVeldrid(mOpt);
+
         }
 
-        public void StartVeldridService()
+        public void InitService()
         {
             MachWindow = new MachWindow(MachOptions);
 
@@ -55,7 +56,7 @@ namespace KanMach.Veldrid
             }
         }
 
-        private void CreateResources()
+        public void CreateResources()
         {
             ResourceFactory factory = _graphicsDevice.ResourceFactory;
 
@@ -77,7 +78,7 @@ namespace KanMach.Veldrid
 
         }
 
-        private void Draw()
+        public void Draw()
         {
             _cl.Begin();
             tick += 0.0001f;
@@ -119,7 +120,7 @@ namespace KanMach.Veldrid
             _graphicsDevice.WaitForIdle();
         }
 
-        private void DisposeResources()
+        public void DisposeResources()
         {
             _pipeline.Pipeline.Dispose();
             _cl.Dispose();
@@ -128,9 +129,9 @@ namespace KanMach.Veldrid
             _graphicsDevice.Dispose();
         }
 
-        public void ConfigureVeldrid(MachOptions mOpt)
+        public void ConfigureVeldrid(MachOptions mo)
         {
-            MachOptions = mOpt;
+            MachOptions = mo;
         }
     }
 }
