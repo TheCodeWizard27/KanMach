@@ -15,11 +15,11 @@ namespace KanMach.Sample
 
         public void ConfigureServices(IServiceCollection services)
         {
-           
         }
 
         public void Configure(KanGameEngine engine)
         {
+            
         }
 
     }

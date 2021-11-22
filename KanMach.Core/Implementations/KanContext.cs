@@ -23,5 +23,19 @@ namespace KanMach.Core
         {
             KanGameEngine.SwapGameControllers(controller, keepOld);
         }
+
+        public T Resolve<T>()
+        {
+            return ActivatorUtilities.CreateInstance<T>(Provider);
+        }
+
+        public T ResolveController<T>(bool newScope) where T : KanGameController
+        {
+            var context = newScope ? CreateNewScope() : this;
+            var controller = ActivatorUtilities.CreateInstance<T>(context.Provider);
+            controller.Context = context;
+
+            return controller;
+        }
     }
 }

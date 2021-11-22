@@ -14,5 +14,8 @@ namespace KanMach.Core.Interfaces
         public IKanContext CreateNewScope();
         public void SwapController(KanGameController controller, bool keepOld = false);
 
+        public T Resolve<T>();
+        public T ResolveController<T>() where T : KanGameController;
+
     }
 }

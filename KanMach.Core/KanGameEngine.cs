@@ -68,7 +68,6 @@ namespace KanMach.Core
             }
 
             CurrentController = controller;
-            CurrentController.Context = Context.CreateNewScope();
             CurrentController.Init();
         }
 
