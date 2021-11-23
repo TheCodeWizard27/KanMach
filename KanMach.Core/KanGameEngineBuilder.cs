@@ -38,17 +38,18 @@ namespace KanMach.Core
 
         public KanGameEngine Build()
         {
+            Logger ??= new KanLogger();
+            var gameEngine = new KanGameEngine(Logger);
+
             var serviceCollection = new ServiceCollection();
 
-            if(StartupType != null)
-            {
-                var startup = (IStartup)Activator.CreateInstance(StartupType);
-                startup.ConfigureServices(serviceCollection);
-            }
-            Logger ??= new KanLogger();
+            var startup = StartupType != null ? (IStartup)Activator.CreateInstance(StartupType) : null;
+            startup?.ConfigureServices(serviceCollection);
 
-            var context = new KanContext(serviceCollection.BuildServiceProvider());
-            var gameEngine = new KanGameEngine(Logger, context);
+            var provider = serviceCollection.BuildServiceProvider();
+            gameEngine.Context = new KanContext(provider.CreateScope().ServiceProvider);
+
+            startup?.Configure(gameEngine);
 
             return gameEngine;
         }

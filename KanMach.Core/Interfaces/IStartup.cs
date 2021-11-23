@@ -11,6 +11,7 @@ namespace KanMach.Core.Interfaces
     {
 
         public void ConfigureServices(IServiceCollection services);
+        public void Configure(KanGameEngine engine);
 
     }
 }
