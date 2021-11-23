@@ -9,14 +9,15 @@ using System.Numerics;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
+using static KanMach.Veldrid.IVeldridService;
 
 namespace KanMach.Veldrid
 {
     public class VeldridService : IVeldridService
     {
-        private MachWindow MachWindow;
-        private MachCamera MachCamera;
-        private MachOptions MachOptions;
+        private MachWindow _machWindow;
+        private MachCamera _machCamera;
+        private MachOptions _machOptions;
         private GraphicsDevice _graphicsDevice;
         private CommandList _cl;
         private DeviceBuffer _modelBuffer;
@@ -29,31 +30,25 @@ namespace KanMach.Veldrid
         private Vector3[] _vertices;
         private ushort[] _indices;
         private float tick;
-        
 
+        public event OnCloseHandler OnClose;
 
-        public VeldridService()
+        public VeldridService(MachOptions machOptions)
         {
-
+            _machOptions = machOptions ?? new MachOptions();
         }
 
-        public void InitService()
+        public void Init()
         {
-            MachWindow = new MachWindow(MachOptions);
+            _machWindow = new MachWindow(_machOptions);
+            _machWindow.Closed += () => OnClose?.Invoke();
 
-
-            _graphicsDevice = VeldridStartup.CreateGraphicsDevice(MachWindow, MachOptions.GDOpt);
-            MachCamera = new MachCamera(MachWindow);
+            _graphicsDevice = VeldridStartup.CreateGraphicsDevice(_machWindow,  _machOptions.GDOpt);
+            _machCamera = new MachCamera(_machWindow);
             _indices = Cube.GetCubeIndices();
             _vertices = Cube.GetCubeVertices();
 
             CreateResources();
-
-            while (MachWindow.Exists)
-            {
-                MachWindow.PumpEvents();
-                Draw();
-            }
         }
 
         public void CreateResources()
@@ -89,8 +84,8 @@ namespace KanMach.Veldrid
                 * Matrix4x4.CreateRotationZ(tick)
                 * Matrix4x4.CreateScale(1.0f);
 
-            Matrix4x4 lookAtMatrix = Matrix4x4.CreateLookAt(MachCamera.Position, MachCamera.Position - MachCamera.Direction, MachCamera.CameraUp);
-            Matrix4x4 perspectiveMatrix = Matrix4x4.CreatePerspectiveFieldOfView(MachCamera.Fov, MachCamera.Width / MachCamera.Height, MachCamera.Near, MachCamera.Far);
+            Matrix4x4 lookAtMatrix = Matrix4x4.CreateLookAt(_machCamera.Position, _machCamera.Position - _machCamera.Direction, _machCamera.CameraUp);
+            Matrix4x4 perspectiveMatrix = Matrix4x4.CreatePerspectiveFieldOfView(_machCamera.Fov, _machCamera.Width / _machCamera.Height, _machCamera.Near, _machCamera.Far);
 
             _cl.UpdateBuffer(_modelBuffer, 0, ref modelMatrix);
             _cl.UpdateBuffer(_viewBuffer, 0, ref lookAtMatrix);
@@ -131,7 +126,17 @@ namespace KanMach.Veldrid
 
         public void ConfigureVeldrid(MachOptions mo)
         {
-            MachOptions = mo;
+            _machOptions = mo;
+        }
+
+        public void Close()
+        {
+            _machWindow.Close();
+        }
+
+        public void PumpEvents()
+        {
+            _machWindow.PumpEvents();
         }
     }
 }

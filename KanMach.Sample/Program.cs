@@ -34,19 +34,16 @@ namespace KanMach.Sample
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Started KanMach");
+
             KanGameEngineBuilder
                 .CreateDefaultBuilder()
                 .SetStartup<Startup>()
                 .Build()
                 .Run<SampleController>();
 
-            Console.WriteLine("Game Closed Successfully");
+            Console.WriteLine("Program exited successfully");
             Console.ReadLine();
-        }
-
-        public static void GraphicsSample()
-        {
-            var vs = new VeldridService();
         }
 
         public static void EcsSample()

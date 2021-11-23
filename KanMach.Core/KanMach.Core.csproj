@@ -9,8 +9,4 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\KanMach.Veldrid\KanMach.Veldrid.csproj" />
-  </ItemGroup>
-
 </Project>

@@ -5,14 +5,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KanMach.Veldrid.Util
+namespace KanMach.Veldrid
 {
     public interface IVeldridService
     {
+        delegate void OnCloseHandler();
+        event OnCloseHandler OnClose;
+
+        void Close();
         void DisposeResources();
-        void ConfigureVeldrid();
-        void Draw();
         void CreateResources();
-        void InitService(MachOptions mo);
+        void Init();
+
+        void Draw();
+        void PumpEvents();
     }
 }
