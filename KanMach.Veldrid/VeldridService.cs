@@ -15,7 +15,7 @@ namespace KanMach.Veldrid
 {
     public class VeldridService : IVeldridService
     {
-        private MachWindow _machWindow;
+        public MachWindow _machWindow;
         private MachCamera _machCamera;
         private MachOptions _machOptions;
         private GraphicsDevice _graphicsDevice;

@@ -23,4 +23,10 @@
     <ProjectReference Include="..\KanMach.Core\KanMach.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Input\GameControllerDb.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

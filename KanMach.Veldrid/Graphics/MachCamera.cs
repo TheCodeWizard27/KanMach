@@ -5,6 +5,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
+using Veldrid.Sdl2;
+
 namespace KanMach.Veldrid.Graphics
 {
     class MachCamera
@@ -23,6 +25,7 @@ namespace KanMach.Veldrid.Graphics
 
         public MachCamera(MachWindow mWindow)
         {
+
             Position = new Vector3(0f, -1f, -2f);
             Direction = Vector3.Normalize(Position - Target);
 

@@ -37,6 +37,7 @@ namespace KanMach.Core
 
         public void Run(KanGameController kanGameController)
         {
+
             kanGameController.Context = Context.CreateNewScope();
             kanGameController.Init();
             CurrentController = kanGameController;
