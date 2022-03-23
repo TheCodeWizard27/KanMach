@@ -32,6 +32,7 @@ namespace KanMach.Sample
 
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             Console.WriteLine("Started KanMach");
