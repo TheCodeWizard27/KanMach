@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,11 +10,22 @@ using System.Threading.Tasks;
 namespace KanMach.Veldrid.Input
 {
 
-    public class ValueResolver
+    internal class ValueResolver
     {
 
         public string Event { get; set; }
-        public Func<IntPtr, float> Resolver { get; set; }
+        public Func<IntPtr, ResolvedValue> Resolver { get; set; }
+
+    }
+
+    internal struct ResolvedValue
+    {
+        // Normalized value for axes can be everything between -1.0 to 1.0
+        public float AxisValue;
+        // Normalized value for buttons can be everything between 0 to 1.0
+        public float ButtonValue;
+
+        public bool IsPressed() => ButtonValue >= GamepadMap.VALUE_SENSITIVITY;
 
     }
 
@@ -28,8 +40,8 @@ namespace KanMach.Veldrid.Input
         public const char BUTTON = 'b';
         public const char INVERT_MODIFIER = '~';
 
-        public const int AXIS_RANGE = 32767;
-        public const int AXIS_DEADZONE = 6553;
+        public const int AXIS_RANGE = 32768;
+        public const float VALUE_SENSITIVITY = 0.2f;
 
         public string Id { get; set; }
         public string Name { get; set; }
@@ -81,78 +93,110 @@ namespace KanMach.Veldrid.Input
 
                 switch(resolver.Event)
                 {
+                    case "-" + GamepadEvent.LEFT_X:
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickLeft : 0;
+                        state.Left.X += value.AxisValue;
+                        break;
+                    case "+" + GamepadEvent.LEFT_X:
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickRight : 0;
+                        state.Left.X += value.AxisValue;
+                        break;
+                    case "-" + GamepadEvent.LEFT_Y:
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickUp : 0;
+                        state.Left.Y += value.AxisValue;
+                        break;
+                    case "+" + GamepadEvent.LEFT_Y:
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickDown : 0;
+                        state.Left.Y += value.AxisValue;
+                        break;
+                    case "-" + GamepadEvent.RIGHT_X:
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickLeft : 0;
+                        state.Right.X += value.AxisValue;
+                        break;
+                    case "+" + GamepadEvent.RIGHT_X:
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickRight : 0;
+                        state.Right.X += value.AxisValue;
+                        break;
+                    case "-" + GamepadEvent.RIGHT_Y:
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickUp : 0;
+                        state.Right.Y += value.AxisValue;
+                        break;
+                    case "+" + GamepadEvent.RIGHT_Y:
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickDown : 0;
+                        state.Right.Y += value.AxisValue;
+                        break;
                     case GamepadEvent.LEFT_X:
-                        state.Buttons |= value <= -AXIS_DEADZONE ? GamepadButton.LeftThumbstickLeft : 0;
-                        state.Buttons |= value >= AXIS_DEADZONE ? GamepadButton.LeftThumbstickRight : 0;
-                        state.Left.X = value;
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickLeft : 0;
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickRight : 0;
+                        state.Left.X = value.AxisValue;
                         break;
                     case GamepadEvent.LEFT_Y:
-                        state.Buttons |= value <= -AXIS_DEADZONE ? GamepadButton.LeftThumbstickUp : 0;
-                        state.Buttons |= value >= AXIS_DEADZONE ? GamepadButton.LeftThumbstickDown : 0;
-                        state.Left.Y = value;
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickUp : 0;
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickDown : 0;
+                        state.Left.Y = value.AxisValue;
                         break;
                     case GamepadEvent.LEFT_STICK:
-                        state.Buttons |= value == 1 ? GamepadButton.LeftStick : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.LeftStick : 0;
                         break;
                     case GamepadEvent.RIGHT_X:
-                        state.Buttons |= value <= -AXIS_DEADZONE ? GamepadButton.RightThumbstickLeft : 0;
-                        state.Buttons |= value >= AXIS_DEADZONE ? GamepadButton.RightThumbstickRight : 0;
-                        state.Right.X = value;
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickLeft : 0;
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickRight : 0;
+                        state.Right.X = value.AxisValue;
                         break;
                     case GamepadEvent.RIGHT_Y:
-                        state.Buttons |= value <= -AXIS_DEADZONE ? GamepadButton.RightThumbstickUp : 0;
-                        state.Buttons |= value >= AXIS_DEADZONE ? GamepadButton.RightThumbstickDown : 0;
-                        state.Right.Y = value;
+                        state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickUp : 0;
+                        state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickDown : 0;
+                        state.Right.Y = value.AxisValue;
                         break;
                     case GamepadEvent.RIGHT_STICK:
-                        state.Buttons |= value == 1 ? GamepadButton.RightStick : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.RightStick : 0;
                         break;
                     case GamepadEvent.DP_LEFT:
-                        state.Buttons |= value == 1 ? GamepadButton.DPadLeft : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.DPadLeft : 0;
                         break;
                     case GamepadEvent.DP_UP:
-                        state.Buttons |= value == 1 ? GamepadButton.DPadUp : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.DPadUp : 0;
                         break;
                     case GamepadEvent.DP_RIGHT:
-                        state.Buttons |= value == 1 ? GamepadButton.DPadRight : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.DPadRight : 0;
                         break;
                     case GamepadEvent.DP_DOWN:
-                        state.Buttons |= value == 1 ? GamepadButton.DPadDown : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.DPadDown : 0;
                         break;
                     case GamepadEvent.LEFT_TRIGGER:
-                        state.Buttons |= value >= -AXIS_RANGE ? GamepadButton.LeftTrigger : 0;
-                        state.LeftTrigger = value;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.LeftTrigger : 0;
+                        state.LeftTrigger = value.ButtonValue;
                         break;
                     case GamepadEvent.LEFT_SHOULDER:
-                        state.Buttons |= value == 1 ? GamepadButton.LeftShoulder : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.LeftShoulder : 0;
                         break;
                     case GamepadEvent.RIGHT_TRIGGER:
-                        state.Buttons |= value >= -AXIS_RANGE ? GamepadButton.LeftTrigger : 0;
-                        state.RightTrigger = value;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.RightTrigger : 0;
+                        state.RightTrigger = value.ButtonValue;
                         break;
                     case GamepadEvent.RIGHT_SHOULDER:
-                        state.Buttons |= value == 1 ? GamepadButton.RightShoulder : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.RightShoulder : 0;
                         break;
                     case GamepadEvent.BACK:
-                        state.Buttons |= value == 1 ? GamepadButton.Back : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.Back : 0;
                         break;
                     case GamepadEvent.START:
-                        state.Buttons |= value == 1 ? GamepadButton.Start : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.Start : 0;
                         break;
                     case GamepadEvent.GUIDE:
-                        state.Buttons |= value == 1 ? GamepadButton.BigButton : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.BigButton : 0;
                         break;
                     case GamepadEvent.A:
-                        state.Buttons |= value == 1 ? GamepadButton.A : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.A : 0;
                         break;
                     case GamepadEvent.B:
-                        state.Buttons |= value == 1 ? GamepadButton.B : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.B : 0;
                         break;
                     case GamepadEvent.X:
-                        state.Buttons |= value == 1 ? GamepadButton.X : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.X : 0;
                         break;
                     case GamepadEvent.Y:
-                        state.Buttons |= value == 1 ? GamepadButton.Y : 0;
+                        state.Buttons |= value.IsPressed() ? GamepadButton.Y : 0;
                         break;
                 }
             });
@@ -191,9 +235,15 @@ namespace KanMach.Veldrid.Input
                         var btnId = Convert.ToInt32(value.TrimStart(BUTTON));
                         resolver.Resolver = (joyStickGuid) => ResolveButtonValue(joyStickGuid, btnId);
                         break;
+                    case '-':
+                    case '+':
+                        var axisId = Convert.ToInt32(value.TrimStart('-', '+', AXIS).TrimEnd(INVERT_MODIFIER));
+                        resolver.Resolver = (joystickGuid) =>
+                            ResolveAxisRangeValue(joystickGuid, axisId, value.Contains('+'), value.Contains(INVERT_MODIFIER));
+                        break;
                     case AXIS:
-                        var axisId = Convert.ToInt32(value.TrimStart(AXIS).TrimEnd(INVERT_MODIFIER));
-                        resolver.Resolver = (joyStickGuid) => ResolveAxisValue(joyStickGuid, axisId, value.Contains(INVERT_MODIFIER));
+                        var axisId2 = Convert.ToInt32(value.TrimStart(AXIS).TrimEnd(INVERT_MODIFIER));
+                        resolver.Resolver = (joyStickGuid) => ResolveAxisValue(joyStickGuid, axisId2, value.Contains(INVERT_MODIFIER));
                         break;
                     case HAT:
                         var hatInfo = value.TrimStart(HAT).Split('.');
@@ -210,19 +260,66 @@ namespace KanMach.Veldrid.Input
             _isLoaded = true;
         }
 
-        private float ResolveButtonValue(IntPtr joystickGuid, int buttonId)
+        private ResolvedValue ResolveButtonValue(IntPtr joystickGuid, int buttonId)
         {
-            return SDL_JoystickGetButton(joystickGuid, buttonId);
-        }
-        private float ResolveAxisValue(IntPtr joystickGuid, int axisId, bool invertValue)
-        {
-            var axisValue = SDL_JoystickGetAxis(joystickGuid, axisId);
+            var value = SDL_JoystickGetButton(joystickGuid, buttonId);
 
-            return invertValue ? axisValue * -1 : axisValue;
+            return new ResolvedValue
+            {
+                ButtonValue = value
+            };
         }
-        private float ResolveHatValue(IntPtr joystickGuid, int hatId, int expectedHatValue)
+        private ResolvedValue ResolveAxisRangeValue(IntPtr joystickGuid, int axisId, bool usePositiveRange, bool invertValue)
         {
-            return SDL_JoystickGetHat(joystickGuid, hatId) == expectedHatValue ? 1 : 0;
+            var axisValue = (float) SDL_JoystickGetAxis(joystickGuid, axisId);
+
+            if ((usePositiveRange && axisValue < 0) || (!usePositiveRange && axisValue > 0)) return new ResolvedValue
+            {
+                AxisValue = 0,
+                ButtonValue = 0
+            };
+
+            return new ResolvedValue
+            {
+                // TODO Improve? Same hack as in ResolveAxisValueMethod
+                AxisValue = axisValue >= 0 ? axisValue / AXIS_RANGE : axisValue / (AXIS_RANGE + 1),
+                ButtonValue = axisValue >= 0 ? axisValue / AXIS_RANGE : Math.Abs(axisValue / (AXIS_RANGE + 1))
+            };
+        }
+        private ResolvedValue ResolveAxisValue(IntPtr joystickGuid, int axisId, bool invertValue)
+        {
+            var axisValue = (float) SDL_JoystickGetAxis(joystickGuid, axisId);
+
+            if (invertValue) axisValue *= -1;
+
+            return new ResolvedValue
+            {
+                // TODO Improve? Hack solves negative space being 1 greater.
+                AxisValue = axisValue >= 0 ? axisValue / AXIS_RANGE : axisValue / (AXIS_RANGE+1),
+                ButtonValue = (axisValue + AXIS_RANGE+1) / ((AXIS_RANGE+1)*2)
+            };
+        }
+        private ResolvedValue ResolveHatValue(IntPtr joystickGuid, int hatId, int expectedHatValue)
+        {
+            var hatValue = SDL_JoystickGetHat(joystickGuid, hatId);
+
+            return new ResolvedValue
+            {
+                ButtonValue = hatValue == expectedHatValue ? 1 : 0,
+                AxisValue = GetHatStateVector(hatValue)
+            };
+        }
+
+        private float GetHatStateVector(int hatState)
+        {
+            switch(hatState)
+            {
+                case 1: return -1;
+                case 2: return 1;
+                case 4: return 1;
+                case 8: return -1;
+                default: return 0;
+            }
         }
 
         private static string PrepareLine(string line)

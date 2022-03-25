@@ -28,7 +28,9 @@ namespace KanMach.Veldrid.Input
         {
             _previousState = _currentState;
             _currentState = GamepadMap.PollState(Handle);
-
+            //Console.WriteLine($"DPAD: X[{_currentState.DPad.X}] Y[{_currentState.DPad.X}]");
+            //Console.WriteLine($"Left:X[{_currentState.Left.X}] Y[{_currentState.Left.Y}] | Right:X[{_currentState.Right.X}] Y[{_currentState.Right.Y}]");
+            //Console.WriteLine($"Left:{_currentState.LeftTrigger} | Right:{_currentState.RightTrigger}");
             Console.WriteLine($"[{string.Join(',', Convert.ToString((int)_currentState.Buttons, 2).Select(x => x.ToString()))}]");
         }
 
