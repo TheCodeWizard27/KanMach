@@ -17,7 +17,10 @@ namespace KanMach.Sample
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.UseVeldridFrontend();
+            services.UseVeldridFrontend(opt =>
+            {
+                opt.UseGamepads();
+            });
 
         }
 

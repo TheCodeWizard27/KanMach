@@ -1,4 +1,5 @@
 ﻿using KanMach.Core;
+using KanMach.Veldrid.Input;
 using KanMach.Veldrid.Util.Options;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -20,13 +21,22 @@ namespace KanMach.Veldrid.Util
 
             veldridService.Init();
 
+            var inputManager = engine.Context.Provider.GetService<Sdl2InputManager>();
+            inputManager.StartListening();
+
             return engine;
         }
 
-        public static IServiceCollection UseVeldridFrontend(this IServiceCollection services, Func<MachOptions, MachOptions> configurator = null)
+        public static IServiceCollection UseVeldridFrontend(this IServiceCollection services, Action<MachOptions> configurator = null)
         {
-            var veldridService = new VeldridService(configurator?.Invoke(new MachOptions()));
+            var machOptions = new MachOptions();
+            configurator?.Invoke(machOptions);
+
+            var veldridService = new VeldridService(machOptions);
             services.AddSingleton<IVeldridService>(veldridService);
+
+            var sdl2InputManager = new Sdl2InputManager(machOptions.Sdl2InputManagerOptions);
+            services.AddSingleton(sdl2InputManager);
 
             return services;
         }

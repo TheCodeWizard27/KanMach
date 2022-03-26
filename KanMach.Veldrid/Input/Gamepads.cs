@@ -12,11 +12,11 @@ namespace KanMach.Veldrid.Input
 {
     public class Gamepads
     {
-        public static readonly UInt32 SDL_INIT_JOYSTICK = 0x00000200u;
-        public static readonly UInt32 SDL_INIT_GAMECONTROLLER = 0x00002000u;
+        internal static readonly UInt32 SDL_INIT_JOYSTICK = 0x00000200u;
+
+        private static bool _initialised;
 
         private Dictionary<SDL_JoystickGUID, Gamepad> _connectedGamepads;
-        private List<GamepadMap> _mappers;
 
         #region SDL2 imports
 
@@ -24,16 +24,7 @@ namespace KanMach.Veldrid.Input
         private static extern int SDL_NumJoysticks();
 
         [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void SDL_GameControllerUpdate();
-
-        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int SDL_JoystickEventState(int state);
-
-        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SDL_IsGameController(int index);
-
-        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int SDL_Init(UInt32 flags);
 
         [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
         private static extern int SDL_InitSubSystem(UInt32 flags);
@@ -67,17 +58,26 @@ namespace KanMach.Veldrid.Input
 
         #endregion
 
+        public delegate void OnConnectionHandler(Gamepad connectedGamepad);
+        public event OnConnectionHandler OnConnect;
+        public event OnConnectionHandler OnDisconnect;
+
+        public delegate void OnButtonEventHandler(Gamepad gamepad, GamepadButton button);
+        public event OnButtonEventHandler OnButtonDown;
+        public event OnButtonEventHandler OnButtonUp;
+        public event OnButtonEventHandler OnButtonPressed;
+        public event OnButtonEventHandler OnButtonClicked;
+        public event OnButtonEventHandler OnButtonReleased;
+
         internal void Init()
         {
+            if (_initialised) return;
+            _initialised = true;
+
             var gameControllerDbPath = "Input/GameControllerDb.txt";
-
             _connectedGamepads = new Dictionary<SDL_JoystickGUID, Gamepad>(new SDLJoystickGuidComparer());
-            //_mappers = GamepadMap
-            //    .CreateMapping(File.ReadAllText(gameControllerDbPath))
-            //    .ToList();
 
-            var joystickInit = SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-            SDL_JoystickEventState(1);
+            SDL_InitSubSystem(SDL_INIT_JOYSTICK);
             var result = SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(gameControllerDbPath, "r"));
             if (result < 0)
             {
@@ -90,44 +90,60 @@ namespace KanMach.Veldrid.Input
             try
             {
                 var joyStickCount = SDL_NumJoysticks();
-                SDL_GameController gameController;
-                SDL_JoystickGUID joystickGuid;
-
                 SDL_JoystickUpdate();
 
                 for (var i = 0; i < joyStickCount; i++)
                 {
                     if (!SDL_IsGameController(i)) continue;
 
-                    gameController = SDL_GameControllerOpen(i);
-                    joystickGuid = SDL_JoystickGetDeviceGUID(i);
-                    var handle = SDL_JoystickOpen(i);
-                    if (handle == IntPtr.Zero)
-                        throw new Exception("Zero");
+                    var joystickGuid = SDL_JoystickGetDeviceGUID(i);
 
                     var gamepad = _connectedGamepads.GetValueOrDefault(joystickGuid);
+                    if (gamepad != null) continue;
 
-                    if (gamepad == null)
+                    var handle = SDL_JoystickOpen(i);
+                    if (handle == IntPtr.Zero) continue;
+
+                    var gameController = SDL_GameControllerOpen(i);
+
+                    var mapping = Marshal.PtrToStringAnsi(SDL_GameControllerMapping(gameController));
+                    var mapper = new GamepadMap(mapping);
+                    gamepad = new Gamepad(handle, mapper);
+                    _connectedGamepads.Add(joystickGuid, gamepad);
+                    ConnectGamepadEvents(gamepad);
+
+                    SDL_GameControllerClose(gameController);
+                }
+
+                foreach(var gamepadEntry in _connectedGamepads.ToList())
+                {
+                    if(!gamepadEntry.Value.IsConnected)
                     {
-                        var mapping = Marshal.PtrToStringAnsi(SDL_GameControllerMapping(gameController));
-                        var mapper = new GamepadMap(mapping);
-                        gamepad = new Gamepad(handle, mapper);
-                        _connectedGamepads.Add(joystickGuid, gamepad);
+                        _connectedGamepads.Remove(gamepadEntry.Key);
+                        OnDisconnect?.Invoke(gamepadEntry.Value);
+
+                        SDL_JoystickClose(gamepadEntry.Value.Handle);
+                        continue;
                     }
 
-                    gamepad.Poll();
-
-                    //SDL_JoystickClose(handle);
-                    //SDL_GameControllerClose(gameController);
-
+                    gamepadEntry.Value.Poll();
                 }
+
             }catch
             {
                 Console.WriteLine("Caught Exception while polling gamepad state");
             }
-            
+        }
 
-            //Console.WriteLine($"[{string.Join(',', _connectedGamepads.Select(x => x.ToString()))}]");
+        private void ConnectGamepadEvents(Gamepad gamepad)
+        {
+            OnConnect?.Invoke(gamepad);
+            gamepad.OnButtonDown += (button) => OnButtonDown?.Invoke(gamepad, button);
+            gamepad.OnButtonUp += (button) => OnButtonDown?.Invoke(gamepad, button);
+            gamepad.OnButtonPressed += (button) => OnButtonDown?.Invoke(gamepad, button);
+            gamepad.OnButtonClicked += (button) => OnButtonDown?.Invoke(gamepad, button);
+            gamepad.OnButtonReleased += (button) => OnButtonDown?.Invoke(gamepad, button);
+
         }
 
     }

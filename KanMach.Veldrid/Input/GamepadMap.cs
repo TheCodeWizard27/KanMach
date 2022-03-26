@@ -40,7 +40,7 @@ namespace KanMach.Veldrid.Input
         public const char BUTTON = 'b';
         public const char INVERT_MODIFIER = '~';
 
-        public const int AXIS_RANGE = 32768;
+        public const int AXIS_RANGE = 32767;
         public const float VALUE_SENSITIVITY = 0.2f;
 
         public string Id { get; set; }
@@ -296,7 +296,7 @@ namespace KanMach.Veldrid.Input
             {
                 // TODO Improve? Hack solves negative space being 1 greater.
                 AxisValue = axisValue >= 0 ? axisValue / AXIS_RANGE : axisValue / (AXIS_RANGE+1),
-                ButtonValue = (axisValue + AXIS_RANGE+1) / ((AXIS_RANGE+1)*2)
+                ButtonValue = (axisValue + AXIS_RANGE+1) / (AXIS_RANGE*2+1)
             };
         }
         private ResolvedValue ResolveHatValue(IntPtr joystickGuid, int hatId, int expectedHatValue)

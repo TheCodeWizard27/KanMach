@@ -13,7 +13,7 @@ namespace KanMach.Veldrid.Graphics
     public class MachWindow : Sdl2Window
     {
         
-        public MachWindow(MachOptions mo) : base(mo.WOpt.Title, mo.WOpt.X, mo.WOpt.Y, mo.WOpt.Width, mo.WOpt.Height, mo.WOpt.Flag, mo.WOpt.ThreadedProcessing)
+        public MachWindow(MachOptions mo) : base(mo.WindowOptions.Title, mo.WindowOptions.X, mo.WindowOptions.Y, mo.WindowOptions.Width, mo.WindowOptions.Height, mo.WindowOptions.Flag, mo.WindowOptions.ThreadedProcessing)
         {
 
 

@@ -14,5 +14,8 @@ namespace KanMach.Veldrid.Input
         public float RightTrigger;
         public Vector2 Left;
         public Vector2 Right;
+
+        public bool IsButtonDown(GamepadButton button) => (Buttons & button) == button;
+        public bool IsButtonUp(GamepadButton button) => (Buttons & button) != button;
     }
 }

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿using KanMach.Veldrid.Util.Options;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,8 +15,18 @@ namespace KanMach.Veldrid.Input
 
         public Gamepads Gamepads { get; protected set; } = new Gamepads();
 
+        public Sdl2InputManager(Sdl2InputManagerOptions options)
+        {
+            Interval = options.Interval;
+            GamePadPollingEnabled = options.GamePadPollingEnabled;
+        }
+
         public void StartListening()
         {
+            if (_cancelToken != null) throw new Exception("Gamepad polling already enabled.");
+
+            if (!GamePadPollingEnabled) return;
+
             _cancelToken = new CancellationTokenSource();
             var tmpToken = _cancelToken.Token;
 
@@ -29,7 +36,7 @@ namespace KanMach.Veldrid.Input
             {
                 do
                 {
-                    if (GamePadPollingEnabled) Gamepads.Poll();
+                    Gamepads.Poll();
                     Thread.Sleep(Interval);
                 } while (!tmpToken.IsCancellationRequested);
             }, tmpToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);

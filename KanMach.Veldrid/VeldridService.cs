@@ -43,7 +43,7 @@ namespace KanMach.Veldrid
             _machWindow = new MachWindow(_machOptions);
             _machWindow.Closed += () => OnClose?.Invoke();
 
-            _graphicsDevice = VeldridStartup.CreateGraphicsDevice(_machWindow,  _machOptions.GDOpt);
+            _graphicsDevice = VeldridStartup.CreateGraphicsDevice(_machWindow,  _machOptions.GraphicsDeviceOptions);
             _machCamera = new MachCamera(_machWindow);
             _indices = Cube.GetCubeIndices();
             _vertices = Cube.GetCubeVertices();

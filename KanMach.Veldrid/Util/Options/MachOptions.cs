@@ -9,14 +9,15 @@ namespace KanMach.Veldrid.Util.Options
 {
     public class MachOptions
     {
-        public MachWindowOptions WOpt { get; set; }
-        public GraphicsDeviceOptions GDOpt { get; set; }
+        public MachWindowOptions WindowOptions { get; set; }
+        public Sdl2InputManagerOptions Sdl2InputManagerOptions { get; set; }
+        public GraphicsDeviceOptions GraphicsDeviceOptions { get; set; }
 
         public MachOptions()
         {
-            WOpt = new MachWindowOptions();
+            WindowOptions = new MachWindowOptions();
 
-            GDOpt = new GraphicsDeviceOptions(
+            GraphicsDeviceOptions = new GraphicsDeviceOptions(
                 debug: false,
                 swapchainDepthFormat: PixelFormat.R16_UNorm,
                 syncToVerticalBlank: false,
@@ -24,12 +25,27 @@ namespace KanMach.Veldrid.Util.Options
                 preferDepthRangeZeroToOne: true,
                 preferStandardClipSpaceYDirection: false
             );
+
+            Sdl2InputManagerOptions = new Sdl2InputManagerOptions()
+            {
+                GamePadPollingEnabled = false
+            };
         }
 
         public MachOptions(MachWindowOptions wOpt, GraphicsDeviceOptions gOpt)
         {
-            WOpt = wOpt;
-            GDOpt = gOpt;
+            WindowOptions = wOpt;
+            GraphicsDeviceOptions = gOpt;
         }
+
+        public void UseGamepads(Action<Sdl2InputManagerOptions> configurator = null)
+        {
+            Sdl2InputManagerOptions = new Sdl2InputManagerOptions()
+            {
+                GamePadPollingEnabled = true
+            };
+            configurator?.Invoke(Sdl2InputManagerOptions);
+        }
+
     }
 }
