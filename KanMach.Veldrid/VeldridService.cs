@@ -1,4 +1,5 @@
-﻿using KanMach.Veldrid.Components;
+﻿using ImGuiNET;
+using KanMach.Veldrid.Components;
 using KanMach.Veldrid.Graphics;
 using KanMach.Veldrid.Model;
 using KanMach.Veldrid.Model.Src;
@@ -19,6 +20,7 @@ namespace KanMach.Veldrid
         private MachCamera _machCamera;
         private MachOptions _machOptions;
         private GraphicsDevice _graphicsDevice;
+        private ImGuiRenderer _imGuiRenderer;
         private CommandList _cl;
         private DeviceBuffer _modelBuffer;
         private DeviceBuffer _indexBuffer;
@@ -44,6 +46,14 @@ namespace KanMach.Veldrid
             _machWindow.Closed += () => OnClose?.Invoke();
 
             _graphicsDevice = VeldridStartup.CreateGraphicsDevice(_machWindow,  _machOptions.GraphicsDeviceOptions);
+            _imGuiRenderer = new ImGuiRenderer(
+                _graphicsDevice,
+                _graphicsDevice.MainSwapchain.Framebuffer.OutputDescription,
+                _machWindow.Width,
+                _machWindow.Height);
+
+            _machWindow.Resized += _machWindow_Resized;
+
             _machCamera = new MachCamera(_machWindow);
             _indices = Cube.GetCubeIndices();
             _vertices = Cube.GetCubeVertices();
@@ -51,10 +61,15 @@ namespace KanMach.Veldrid
             CreateResources();
         }
 
+        private void _machWindow_Resized()
+        {
+            _imGuiRenderer.WindowResized(_machWindow.Width, _machWindow.Height);
+            _graphicsDevice.MainSwapchain.Resize((uint)_machWindow.Width, (uint)_machWindow.Height);
+        }
+
         public void CreateResources()
         {
             ResourceFactory factory = _graphicsDevice.ResourceFactory;
-
 
             _modelBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
@@ -75,6 +90,24 @@ namespace KanMach.Veldrid
 
         public void Draw()
         {
+            var snapshot = _machWindow.PumpEvents();
+            _imGuiRenderer.Update(1f / 60f, snapshot);
+
+            if (ImGui.Begin("Test Window"))
+            {
+                ImGui.TreeNode("test");
+
+                var test = new Vector4();
+                ImGui.ColorEdit4("TestColor", ref test);
+                ImGui.Text("Hello");
+                if (ImGui.Button("Quit"))
+                {
+                    _machWindow.Close();
+                }
+            }
+
+            ImGui.End();
+
             _cl.Begin();
             tick += 0.0001f;
             Matrix4x4 modelMatrix =
@@ -109,6 +142,7 @@ namespace KanMach.Veldrid
                 vertexOffset: 0,
                 instanceStart: 0);
 
+            _imGuiRenderer.Render(_graphicsDevice, _cl);
             _cl.End();
             _graphicsDevice.SubmitCommands(_cl);
             _graphicsDevice.SwapBuffers(_graphicsDevice.MainSwapchain);

@@ -9,7 +9,6 @@ namespace KanMach.Core.Ecs
     public struct EntityData
     {
 
-        public int Id;
         public int Gen;
 
         public int[] ComponentIds;

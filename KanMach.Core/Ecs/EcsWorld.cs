@@ -65,9 +65,9 @@ namespace KanMach.Core.Ecs
 
             return entity;
         }
-        public void Recycle(ref EntityData entityData)
+        public void Recycle(in Entity entity)
         {
-            FreeEntityIds.Add(entityData.Id);
+            FreeEntityIds.Add(entity.Id);
         }
 
         public T View<T>() where T : EcsView

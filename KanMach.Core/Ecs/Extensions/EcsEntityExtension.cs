@@ -19,7 +19,7 @@ namespace KanMach.Core.Ecs.Extensions
             {
                 if (entityData.ComponentTypes[i] != typeId) continue;
                 var pool = (ComponentPool<T>) entity.World.ComponentPools[typeId];
-                return ref pool.GetItem(i);
+                return ref pool.GetItem(entityData.ComponentIds[i]);
             }
 
             if(entityData.ComponentIndex == entityData.ComponentIds.Length)
@@ -86,7 +86,7 @@ namespace KanMach.Core.Ecs.Extensions
             }
             entityData.ComponentIndex = 0;
 
-            entity.World.Recycle(ref entityData);
+            entity.World.Recycle(entity);
         }
 
     }
