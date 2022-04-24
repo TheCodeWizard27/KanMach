@@ -4,7 +4,9 @@ using KanMach.Veldrid.Util.Options;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,6 +41,15 @@ namespace KanMach.Veldrid.Util
             services.AddSingleton(sdl2InputManager);
 
             return services;
+        }
+
+        public static string GetEmbeddedRessource(this Assembly assembly, string ressource)
+        {
+            using (var ressourceStream = assembly.GetManifestResourceStream(ressource))
+            {
+                using (var reader = new StreamReader(ressourceStream))
+                    return reader.ReadToEnd();
+            }
         }
 
     }

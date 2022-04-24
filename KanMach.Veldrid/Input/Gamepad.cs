@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,11 @@ namespace KanMach.Veldrid.Input
         public event OnButtonEventHandler OnButtonPressed;
         public event OnButtonEventHandler OnButtonClicked;
         public event OnButtonEventHandler OnButtonReleased;
+
+        public Vector2 LeftStick { get => _currentState.Left; }
+        public Vector2 RightStick { get => _currentState.Right; }
+        public float LeftTrigger { get => _currentState.LeftTrigger; }
+        public float RightTrigger { get => _currentState.RightTrigger; }
 
         public Gamepad(IntPtr handle, GamepadMap gamepadMap)
         {

@@ -22,6 +22,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="EmbeddedShaders\BasicShader.frag" />
+    <None Remove="EmbeddedShaders\BasicShader.vert" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="EmbeddedShaders\BasicShader.frag" />
+    <EmbeddedResource Include="EmbeddedShaders\BasicShader.vert" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Veldrid" Version="4.8.0" />
     <PackageReference Include="Veldrid.ImGui" Version="5.72.0" />
     <PackageReference Include="Veldrid.SDL2" Version="4.8.0" />
@@ -37,6 +47,10 @@
     <None Update="Input\GameControllerDb.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Rendering\Primitives\" />
   </ItemGroup>
 
 </Project>

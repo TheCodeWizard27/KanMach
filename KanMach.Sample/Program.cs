@@ -43,9 +43,10 @@ namespace KanMach.Sample
                 .Build();
 
             //engineBuilder.Run<InputSampleController>();
-            engineBuilder.Run<EcsHierarchyController>();
+            //engineBuilder.Run<EcsHierarchyController>();
             //engineBuilder.Run<SystemSampleController>();
             //engineBuilder.Run<EcsSampleController>();
+            engineBuilder.Run<GraphicsSampleController>();
 
             Console.WriteLine("Program exited successfully");
             Console.ReadLine();
