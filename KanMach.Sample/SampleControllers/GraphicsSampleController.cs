@@ -7,6 +7,7 @@ using KanMach.Veldrid.Components;
 using KanMach.Veldrid.Input;
 using KanMach.Veldrid.Rendering;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -56,12 +57,13 @@ namespace KanMach.Sample
             var meshes = new List<MeshRenderer>();
 
             var view = _ecsWorld.View<RenderMeshView>();
+            view.First(entity => entity.Component1.Pos.X >= 3);
             foreach (ViewEntity<Transform, RenderMesh> entity in view)
             {
-                meshes.Add(entity.Component2.Renderer);
+                Console.WriteLine($"Entity {entity.Entity} is at {entity.Component1.Pos}");
             }
 
-            _renderer.Draw(meshes);
+            _renderer.Draw(view.Select(entity => entity.Component2.Renderer));
 
         }
 

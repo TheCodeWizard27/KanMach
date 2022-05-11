@@ -294,14 +294,20 @@ namespace KanMach.Core.Ecs.View
 
         }
     }
-    public class EcsView<Inc1, Inc2> : EcsView<Inc1>, IEnumerable<ViewEntity<Inc1, Inc2>>
+    public class EcsView<Inc1, Inc2> : EcsView, IEnumerable<ViewEntity<Inc1, Inc2>>
         where Inc1 : struct
         where Inc2 : struct
     {
+        internal int[] _get1;
         internal int[] _get2;
+
+        internal ComponentPool<Inc1> _pool1;
         internal ComponentPool<Inc2> _pool2;
+
+        internal Inc1[] _incComponents1;
         internal Inc2[] _incComponents2;
 
+        public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
         public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
 
         public EcsView(EcsWorld world) : base(world)
@@ -436,15 +442,26 @@ namespace KanMach.Core.Ecs.View
 
     }
 
-    public class EcsView<Inc1, Inc2, Inc3> : EcsView<Inc1, Inc2>, IEnumerable<ViewEntity<Inc1, Inc2, Inc3>>
+    public class EcsView<Inc1, Inc2, Inc3> : EcsView, IEnumerable<ViewEntity<Inc1, Inc2, Inc3>>
         where Inc1 : struct
         where Inc2 : struct
         where Inc3 : struct
     {
+
+        internal int[] _get1;
+        internal int[] _get2;
         internal int[] _get3;
+        
+        internal ComponentPool<Inc1> _pool1;
+        internal ComponentPool<Inc2> _pool2;
         internal ComponentPool<Inc3> _pool3;
+
+        internal Inc1[] _incComponents1;
+        internal Inc2[] _incComponents2;
         internal Inc3[] _incComponents3;
 
+        public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
+        public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
         public ref Inc3 Get3(in int id) => ref _incComponents3[_get3[id]];
 
         public EcsView(EcsWorld world) : base(world)
@@ -594,15 +611,30 @@ namespace KanMach.Core.Ecs.View
         }
     }
 
-    public class EcsView<Inc1, Inc2, Inc3, Inc4> : EcsView<Inc1, Inc2, Inc3>, IEnumerable<ViewEntity<Inc1, Inc2, Inc3, Inc4>>
+    public class EcsView<Inc1, Inc2, Inc3, Inc4> : EcsView, IEnumerable<ViewEntity<Inc1, Inc2, Inc3, Inc4>>
         where Inc1 : struct
         where Inc2 : struct
         where Inc3 : struct
         where Inc4 : struct
     {
+        internal int[] _get1;
+        internal int[] _get2;
+        internal int[] _get3;
         internal int[] _get4;
+
+        internal ComponentPool<Inc1> _pool1;
+        internal ComponentPool<Inc2> _pool2;
+        internal ComponentPool<Inc3> _pool3;
         internal ComponentPool<Inc4> _pool4;
+
+        internal Inc1[] _incComponents1;
+        internal Inc2[] _incComponents2;
+        internal Inc3[] _incComponents3;
         internal Inc4[] _incComponents4;
+
+        public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
+        public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
+        public ref Inc3 Get3(in int id) => ref _incComponents3[_get3[id]];
         public ref Inc4 Get4(in int id) => ref _incComponents4[_get4[id]];
 
         public EcsView(EcsWorld world) : base(world)

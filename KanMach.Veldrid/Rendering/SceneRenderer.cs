@@ -26,7 +26,7 @@ namespace KanMach.Veldrid.Rendering
             Camera = new Camera(viewport);
         }
 
-        public void Draw(List<MeshRenderer> meshRenderers)
+        public void Draw(IEnumerable<MeshRenderer> meshRenderers)
         {
             var commandList = _context.BeginDraw();
 
