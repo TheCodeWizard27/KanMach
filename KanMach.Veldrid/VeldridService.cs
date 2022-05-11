@@ -18,17 +18,14 @@ namespace KanMach.Veldrid
     public class VeldridService : IVeldridService
     {
         public MachWindow _machWindow;
-        private MachCamera _machCamera;
         private MachOptions _machOptions;
 
         private ImGuiRenderer _imGuiRenderer;
-        private RenderContext _renderContext;
         private CommandList _cl; 
         
         private float _tick;
 
-        // TODO Remove
-        private MeshRenderer _meshRenderer;
+        public RenderContext RenderContext { get; set; }
 
         public event OnCloseHandler OnClose;
 
@@ -50,9 +47,7 @@ namespace KanMach.Veldrid
                 _machWindow.Height);
 
             _machWindow.Resized += _machWindow_Resized;
-
-            _machCamera = new MachCamera(_machWindow);
-            _renderContext = new RenderContext(graphicsDevice);
+            RenderContext = new RenderContext(graphicsDevice);
 
             CreateResources();
         }
@@ -65,11 +60,7 @@ namespace KanMach.Veldrid
 
         public void CreateResources()
         {
-            ResourceFactory factory = _renderContext.ResourceFactory;
-
-            var mesh = new Mesh(Cube.GetCubeVertices(), Cube.GetCubeIndices());
-            var material = BasicMaterial.GetInstance(_renderContext);
-            _meshRenderer = new MeshRenderer(_renderContext, mesh, material);
+            ResourceFactory factory = RenderContext.ResourceFactory;
 
             _cl = factory.CreateCommandList();
         }
@@ -98,32 +89,32 @@ namespace KanMach.Veldrid
                 * Matrix4x4.CreateRotationZ(_tick)
                 * Matrix4x4.CreateScale(1.0f);
 
-            Matrix4x4 lookAtMatrix = Matrix4x4.CreateLookAt(_machCamera.Position, _machCamera.Position - _machCamera.Direction, _machCamera.CameraUp);
-            Matrix4x4 perspectiveMatrix = Matrix4x4.CreatePerspectiveFieldOfView(_machCamera.Fov, _machCamera.Width / _machCamera.Height, _machCamera.Near, _machCamera.Far);
+            //Matrix4x4 lookAtMatrix = Matrix4x4.CreateLookAt(_machCamera.Position, _machCamera.Position - _machCamera.Direction, _machCamera.CameraUp);
+            //Matrix4x4 perspectiveMatrix = Matrix4x4.CreatePerspectiveFieldOfView(_machCamera.Fov, _machCamera.Viewport.X / _machCamera.Viewport.Y, _machCamera.Near, _machCamera.Far);
 
-            _cl.UpdateBuffer(_renderContext.ModelBuffer, 0, ref modelMatrix);
-            _cl.UpdateBuffer(_renderContext.ViewBuffer, 0, ref lookAtMatrix);
-            _cl.UpdateBuffer(_renderContext.ProjectionBuffer, 0, ref perspectiveMatrix);
+            //_cl.UpdateBuffer(RenderContext.ModelBuffer, 0, ref modelMatrix);
+            //_cl.UpdateBuffer(RenderContext.ViewBuffer, 0, ref lookAtMatrix);
+            //_cl.UpdateBuffer(RenderContext.ProjectionBuffer, 0, ref perspectiveMatrix);
 
-            _cl.SetFramebuffer(_renderContext.GraphicsDevice.MainSwapchain.Framebuffer);
+            _cl.SetFramebuffer(RenderContext.GraphicsDevice.MainSwapchain.Framebuffer);
 
             _cl.ClearColorTarget(0, RgbaFloat.Black);
             _cl.ClearDepthStencil(1f);
 
-            _meshRenderer.Render(_cl);
+            //_meshRenderer.Render(_cl);
 
-            _imGuiRenderer.Render(_renderContext.GraphicsDevice, _cl);
+            _imGuiRenderer.Render(RenderContext.GraphicsDevice, _cl);
 
             _cl.End();
-            _renderContext.GraphicsDevice.SubmitCommands(_cl);
-            _renderContext.GraphicsDevice.SwapBuffers(_renderContext.GraphicsDevice.MainSwapchain);
-            _renderContext.GraphicsDevice.WaitForIdle();
+            RenderContext.GraphicsDevice.SubmitCommands(_cl);
+            RenderContext.GraphicsDevice.SwapBuffers(RenderContext.GraphicsDevice.MainSwapchain);
+            RenderContext.GraphicsDevice.WaitForIdle();
         }
 
         public void DisposeResources()
         {
             _cl.Dispose();
-            _renderContext.GraphicsDevice.Dispose();
+            RenderContext.GraphicsDevice.Dispose();
         }
 
         public void ConfigureVeldrid(MachOptions mo)
@@ -139,6 +130,14 @@ namespace KanMach.Veldrid
         public void PumpEvents()
         {
             _machWindow.PumpEvents();
+        }
+
+        public MeshRenderer LoadTestMesh()
+        {
+            var mesh = new Mesh(Cube.GetCubeVertices(), Cube.GetCubeIndices());
+            var material = BasicMaterial.GetInstance(RenderContext);
+
+            return new MeshRenderer(RenderContext, mesh, material);
         }
     }
 }

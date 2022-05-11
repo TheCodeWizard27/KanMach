@@ -5,12 +5,12 @@ layout(set = 0, binding = 0) uniform ModelBuffer
     mat4 Model;
 };
 
-layout(set = 1, binding = 0) uniform ViewBuffer
+layout(set = 0, binding = 1) uniform ViewBuffer
 {
     mat4 View;
 };
 
-layout(set = 1, binding = 1) uniform ProjectionBuffer
+layout(set = 0, binding = 2) uniform ProjectionBuffer
 {
     mat4 Projection;
 };

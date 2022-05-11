@@ -7,13 +7,11 @@ using Veldrid;
 
 namespace KanMach.Veldrid.Components
 {
-    public class Material
+    public class Material : IDisposable
     {
 
-        private ResourceLayout _modelLayout;
-        private ResourceLayout _vertexLayout;
-        private ResourceSet _modelSet;
-        private ResourceSet _vertexSet;
+        private ResourceLayout _mvpLayout;
+        private ResourceSet _mvpSet;
 
         public Pipeline Pipeline { get; set; }
         public Shader Shader { get; set; }
@@ -24,15 +22,12 @@ namespace KanMach.Veldrid.Components
 
             Shader = shader;
 
-            _modelLayout = factory.CreateResourceLayout(
+            _mvpLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                        new ResourceLayoutElementDescription("ModelBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
-
-            _vertexLayout = factory.CreateResourceLayout(
-                new ResourceLayoutDescription(
+                        new ResourceLayoutElementDescription("ModelBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                         new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                         new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-                        ));
+                ));
 
             Pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
@@ -50,28 +45,28 @@ namespace KanMach.Veldrid.Components
                     ),
                 PrimitiveTopology.TriangleList,
                 shader.ShaderSet,
-                new[] { _modelLayout, _vertexLayout },
+                _mvpLayout,
                 context.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription));
 
-            _modelSet = factory.CreateResourceSet(
+            _mvpSet = factory.CreateResourceSet(
                 new ResourceSetDescription(
-                    _modelLayout,
-                    context.ModelBuffer));
-
-            _vertexSet = factory.CreateResourceSet(
-                new ResourceSetDescription(
-                    _vertexLayout,
+                    _mvpLayout,
+                    context.ModelBuffer,
                     context.ViewBuffer,
-                    context.ProjectionBuffer
-                    ));
+                    context.ProjectionBuffer));
         }
 
         public void Prepare(CommandList cmdList)
         {
             cmdList.SetPipeline(Pipeline);
-            cmdList.SetGraphicsResourceSet(0, _modelSet);
-            cmdList.SetGraphicsResourceSet(1, _vertexSet);
+            cmdList.SetGraphicsResourceSet(0, _mvpSet);
         }
 
+        public void Dispose()
+        {
+            _mvpSet.Dispose();
+            _mvpLayout.Dispose();
+            Pipeline.Dispose();
+        }
     }
 }

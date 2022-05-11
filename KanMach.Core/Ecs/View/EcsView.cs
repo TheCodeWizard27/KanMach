@@ -106,11 +106,6 @@ namespace KanMach.Core.Ecs.View
         public abstract void AddEntity(in Entity entity);
         public abstract void RemoveEntity(in Entity entity);
 
-        public Enumerator GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
-
         protected bool TryBufferingOperationIfLocked(bool isAddOperation, Entity entity)
         {
             if (!_lock) return false;
@@ -143,20 +138,15 @@ namespace KanMach.Core.Ecs.View
             }
         }
 
-        public struct Enumerator : IDisposable
+        public abstract class BaseViewEnumerator<T, ViewType> : IEnumerator<T>
+            where ViewType : EcsView
         {
-            readonly EcsView _view;
-            readonly private int _count;
-            private int _index;
-
-            public int Current
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _index;
-            }
+            protected readonly ViewType _view;
+            protected readonly private int _count;
+            protected int _index;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal Enumerator(EcsView view)
+            internal BaseViewEnumerator(ViewType view)
             {
                 _view = view;
                 _count = _view.EntitiesIndex;
@@ -164,51 +154,59 @@ namespace KanMach.Core.Ecs.View
                 _view.Lock();
             }
 
+            public abstract T Current { get; }
+
+            object IEnumerator.Current => Current;
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Dispose() => _view.Unlock();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext() => ++_index < _count;
 
+            public void Reset()
+            {
+                _index = -1;
+            }
         }
 
     }
 
-    public class EcsView<Inc> : EcsView
+    public class EcsView<Inc> : EcsView, IEnumerable<ViewEntity<Inc>>
         where Inc : struct
     {
-        private int[] _get;
-        private readonly ComponentPool<Inc> _pool;
-        private Inc[] _incComponents;
+        internal int[] _get1;
+        internal ComponentPool<Inc> _pool1;
+        internal Inc[] _incComponents1;
 
-        public ref Inc Get(in int id) => ref _incComponents[_get[id]];
+        public ref Inc Get1(in int id) => ref _incComponents1[_get1[id]];
 
         public EcsView(EcsWorld world) : base(world)
         {
             IncludedTypeIndices = new[] { ComponentType<Inc>.TypeId };
             IncludedTypes = new[] { typeof(Inc) };
 
-            _pool = world.GetPool<Inc>();
-            _pool.OnResize += _pool_OnResize;
-            _incComponents = _pool.Components;
-            _get = new int[world.Config.ViewEntityCacheSize];
+            _pool1 = world.GetPool<Inc>();
+            _pool1.OnResize += _pool_OnResize;
+            _incComponents1 = _pool1.Components;
+            _get1 = new int[world.Config.ViewEntityCacheSize];
         }
 
         public override void AddEntity(in Entity entity)
         {
             if (TryBufferingOperationIfLocked(true, entity)) return;
-            if(Entities.Length == EntitiesIndex)
+            if (Entities.Length == EntitiesIndex)
             {
                 var newLength = EntitiesIndex * 2;
                 Array.Resize(ref Entities, newLength);
-                Array.Resize(ref _get, newLength);
+                Array.Resize(ref _get1, newLength);
             }
 
             ref var entityData = ref entity.World.GetEntityData(entity);
-            for (int i = 0, left = 1;left > 0 && i < entityData.ComponentIndex; i++) {
-                if(entityData.ComponentTypes[i] == ComponentType<Inc>.TypeId)
+            for (int i = 0, left = 1; left > 0 && i < entityData.ComponentIndex; i++) {
+                if (entityData.ComponentTypes[i] == ComponentType<Inc>.TypeId)
                 {
-                    _get[EntitiesIndex] = entityData.ComponentIds[i];
+                    _get1[EntitiesIndex] = entityData.ComponentIds[i];
                     left--;
                 }
             }
@@ -225,18 +223,45 @@ namespace KanMach.Core.Ecs.View
             EntitiesIndex--;
 
             //Replace removed entity with newest one.
-            if(id < EntitiesIndex)
+            if (id < EntitiesIndex)
             {
                 Entities[id] = Entities[EntitiesIndex];
                 EntitiesMap[Entities[id].Id] = id;
 
-                _get[id] = _get[EntitiesIndex];
+                _get1[id] = _get1[EntitiesIndex];
             }
         }
 
         private void _pool_OnResize()
         {
-            _incComponents = _pool.Components;
+            _incComponents1 = _pool1.Components;
+        }
+
+        IEnumerator<ViewEntity<Inc>> IEnumerable<ViewEntity<Inc>>.GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public class Enumerator : BaseViewEnumerator<ViewEntity<Inc>, EcsView<Inc>>
+        {
+            public Enumerator(EcsView<Inc> view) : base(view)
+            {
+            }
+
+            public override ViewEntity<Inc> Current { get
+                {
+                    var viewEntity = new ViewEntity<Inc>();
+                    viewEntity._view = _view;
+                    viewEntity.Entity = _index;
+
+                    return viewEntity;
+                } 
+            }
         }
 
         public class Exclude<Exc> : EcsView<Inc>
@@ -269,20 +294,14 @@ namespace KanMach.Core.Ecs.View
 
         }
     }
-    public class EcsView<Inc1, Inc2> : EcsView<Inc1>
+    public class EcsView<Inc1, Inc2> : EcsView<Inc1>, IEnumerable<ViewEntity<Inc1, Inc2>>
         where Inc1 : struct
         where Inc2 : struct
     {
-        private int[] _get1;
-        private int[] _get2;
+        internal int[] _get2;
+        internal ComponentPool<Inc2> _pool2;
+        internal Inc2[] _incComponents2;
 
-        private readonly ComponentPool<Inc1> _pool1;
-        private readonly ComponentPool<Inc2> _pool2;
-
-        private Inc1[] _incComponents1;
-        private Inc2[] _incComponents2;
-
-        public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
         public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
 
         public EcsView(EcsWorld world) : base(world)
@@ -360,6 +379,34 @@ namespace KanMach.Core.Ecs.View
             _incComponents1 = _pool1.Components;
             _incComponents2 = _pool2.Components;
         }
+        IEnumerator<ViewEntity<Inc1, Inc2>> IEnumerable<ViewEntity<Inc1, Inc2>>.GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        new public IEnumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        new public class Enumerator : BaseViewEnumerator<ViewEntity<Inc1, Inc2>, EcsView<Inc1, Inc2>>
+        {
+            public Enumerator(EcsView<Inc1, Inc2> view) : base(view)
+            {
+            }
+
+            public override ViewEntity<Inc1, Inc2> Current
+            {
+                get
+                {
+                    var viewEntity = new ViewEntity<Inc1, Inc2>();
+                    viewEntity._view = _view;
+                    viewEntity.Entity = _index;
+
+                    return viewEntity;
+                }
+            }
+        }
 
         public class Exclude<Exc> : EcsView<Inc1, Inc2>
             where Exc : struct
@@ -386,26 +433,18 @@ namespace KanMach.Core.Ecs.View
                 };
             }
         }
+
     }
-    public class EcsView<Inc1, Inc2, Inc3> : EcsView<Inc1, Inc2>
+
+    public class EcsView<Inc1, Inc2, Inc3> : EcsView<Inc1, Inc2>, IEnumerable<ViewEntity<Inc1, Inc2, Inc3>>
         where Inc1 : struct
         where Inc2 : struct
         where Inc3 : struct
     {
-        private int[] _get1;
-        private int[] _get2;
-        private int[] _get3;
+        internal int[] _get3;
+        internal ComponentPool<Inc3> _pool3;
+        internal Inc3[] _incComponents3;
 
-        private readonly ComponentPool<Inc1> _pool1;
-        private readonly ComponentPool<Inc2> _pool2;
-        private readonly ComponentPool<Inc3> _pool3;
-
-        private Inc1[] _incComponents1;
-        private Inc2[] _incComponents2;
-        private Inc3[] _incComponents3;
-
-        public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
-        public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
         public ref Inc3 Get3(in int id) => ref _incComponents3[_get3[id]];
 
         public EcsView(EcsWorld world) : base(world)
@@ -499,6 +538,35 @@ namespace KanMach.Core.Ecs.View
             _incComponents3 = _pool3.Components;
         }
 
+        IEnumerator<ViewEntity<Inc1, Inc2, Inc3>> IEnumerable<ViewEntity<Inc1, Inc2, Inc3>>.GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        new public IEnumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        new public class Enumerator : BaseViewEnumerator<ViewEntity<Inc1, Inc2, Inc3>, EcsView<Inc1, Inc2, Inc3>>
+        {
+            public Enumerator(EcsView<Inc1, Inc2, Inc3> view) : base(view)
+            {
+            }
+
+            public override ViewEntity<Inc1, Inc2, Inc3> Current
+            {
+                get
+                {
+                    var viewEntity = new ViewEntity<Inc1, Inc2, Inc3>();
+                    viewEntity._view = _view;
+                    viewEntity.Entity = _index;
+
+                    return viewEntity;
+                }
+            }
+        }
+
         public class Exclude<Exc> : EcsView<Inc1, Inc2, Inc3>
             where Exc : struct
         {
@@ -526,30 +594,15 @@ namespace KanMach.Core.Ecs.View
         }
     }
 
-    public class EcsView<Inc1, Inc2, Inc3, Inc4> : EcsView<Inc1, Inc2>
+    public class EcsView<Inc1, Inc2, Inc3, Inc4> : EcsView<Inc1, Inc2, Inc3>, IEnumerable<ViewEntity<Inc1, Inc2, Inc3, Inc4>>
         where Inc1 : struct
         where Inc2 : struct
         where Inc3 : struct
         where Inc4 : struct
     {
-        private int[] _get1;
-        private int[] _get2;
-        private int[] _get3;
-        private int[] _get4;
-
-        private readonly ComponentPool<Inc1> _pool1;
-        private readonly ComponentPool<Inc2> _pool2;
-        private readonly ComponentPool<Inc3> _pool3;
-        private readonly ComponentPool<Inc4> _pool4;
-
-        private Inc1[] _incComponents1;
-        private Inc2[] _incComponents2;
-        private Inc3[] _incComponents3;
-        private Inc4[] _incComponents4;
-
-        public ref Inc1 Get1(in int id) => ref _incComponents1[_get1[id]];
-        public ref Inc2 Get2(in int id) => ref _incComponents2[_get2[id]];
-        public ref Inc3 Get3(in int id) => ref _incComponents3[_get3[id]];
+        internal int[] _get4;
+        internal ComponentPool<Inc4> _pool4;
+        internal Inc4[] _incComponents4;
         public ref Inc4 Get4(in int id) => ref _incComponents4[_get4[id]];
 
         public EcsView(EcsWorld world) : base(world)
@@ -657,6 +710,35 @@ namespace KanMach.Core.Ecs.View
             _incComponents2 = _pool2.Components;
             _incComponents3 = _pool3.Components;
             _incComponents4 = _pool4.Components;
+        }
+
+        IEnumerator<ViewEntity<Inc1, Inc2, Inc3, Inc4>> IEnumerable<ViewEntity<Inc1, Inc2, Inc3, Inc4>>.GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        new public IEnumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        new public class Enumerator : BaseViewEnumerator<ViewEntity<Inc1, Inc2, Inc3, Inc4>, EcsView<Inc1, Inc2, Inc3, Inc4>>
+        {
+            public Enumerator(EcsView<Inc1, Inc2, Inc3, Inc4> view) : base(view)
+            {
+            }
+
+            public override ViewEntity<Inc1, Inc2, Inc3, Inc4> Current
+            {
+                get
+                {
+                    var viewEntity = new ViewEntity<Inc1, Inc2, Inc3, Inc4>();
+                    viewEntity._view = _view;
+                    viewEntity.Entity = _index;
+
+                    return viewEntity;
+                }
+            }
         }
 
         public class Exclude<Exc> : EcsView<Inc1, Inc2, Inc3>

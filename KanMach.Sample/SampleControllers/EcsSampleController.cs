@@ -1,14 +1,19 @@
 ﻿using KanMach.Core;
 using KanMach.Core.Ecs;
 using KanMach.Core.Ecs.Extensions;
+using KanMach.Core.Ecs.View;
 using KanMach.Core.Interfaces;
 using KanMach.Veldrid;
 using KanMach.Veldrid.Input;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace KanMach.Sample
 {
+
     public class EcsSampleController : KanGameController
     {
 
@@ -41,10 +46,9 @@ namespace KanMach.Sample
             time = DateTime.Now;
 
             var view = world.View<GameObjectView>();
-            foreach (var id in view)
+            foreach (ViewEntity<Transform> entity in view)
             {
-                var transform = view.GetTransform(id);
-                //Console.WriteLine($"{{ x: {transform.Pos.X} \t\t| y: {transform.Pos.Y} \t\t| z: {transform.Pos.Z} }} \t\t[ Grounded: {transform.OnFloor} \t]");
+                //Console.WriteLine($"{{ x: {entity.Component.Pos.X} \t\t| y: {entity.Component.Pos.Y} \t\t| z: {entity.Component.Pos.Z} }} \t\t[ Grounded: {entity.Component.OnFloor} \t]");
             }
             Console.WriteLine($"Looped through 10000 Entities in {DateTime.Now - time}");
         }
@@ -56,5 +60,25 @@ namespace KanMach.Sample
         public override void Dispose()
         {
         }
+
+        internal struct TestStruct
+        {
+            public int Counter;
+        }
+
+        internal struct Transform
+        {
+            public Vector3 Pos;
+            public bool OnFloor;
+        }
+
+        internal class GameObjectView : EcsView<Transform>
+        {
+
+            public GameObjectView(EcsWorld world) : base(world)
+            {
+            }
+        }
+
     }
 }

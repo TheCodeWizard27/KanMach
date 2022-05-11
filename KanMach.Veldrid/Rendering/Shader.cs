@@ -26,6 +26,5 @@ namespace KanMach.Veldrid.Components
                     new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(vertexCode), "main"),
                     new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(fragmentCode), "main")));
         }
-
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
@@ -16,8 +17,11 @@ namespace KanMach.Veldrid.Components
         public Mesh Mesh { get; private set; }
         public Material Material { get; private set; }
 
+        RenderContext RenderContext { get; set; }
+
         public MeshRenderer(RenderContext context, Mesh mesh, Material material)
         {
+            RenderContext = context;
             Mesh = mesh;
             Material = material;
 
@@ -33,6 +37,15 @@ namespace KanMach.Veldrid.Components
         public void Render(CommandList cmdList) {
 
             Material.Prepare(cmdList);
+
+            var modelMatrix =
+                Matrix4x4.CreateTranslation(0f, 0, -0.01f)
+                * Matrix4x4.CreateRotationX(0f)
+                * Matrix4x4.CreateRotationY(0f)
+                * Matrix4x4.CreateRotationZ(0.0001f)
+                * Matrix4x4.CreateScale(1.0f);
+
+            cmdList.UpdateBuffer(RenderContext.ModelBuffer, 0, ref modelMatrix);
 
             cmdList.SetVertexBuffer(0, _vertexBuffer);
             cmdList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
