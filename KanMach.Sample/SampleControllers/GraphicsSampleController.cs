@@ -57,7 +57,6 @@ namespace KanMach.Sample
             var meshes = new List<MeshRenderer>();
 
             var view = _ecsWorld.View<RenderMeshView>();
-            view.First(entity => entity.Component1.Pos.X >= 3);
             foreach (ViewEntity<Transform, RenderMesh> entity in view)
             {
                 Console.WriteLine($"Entity {entity.Entity} is at {entity.Component1.Pos}");

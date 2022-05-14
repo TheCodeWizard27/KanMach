@@ -38,15 +38,6 @@ namespace KanMach.Veldrid.Components
 
             Material.Prepare(cmdList);
 
-            var modelMatrix =
-                Matrix4x4.CreateTranslation(0f, 0, -0.01f)
-                * Matrix4x4.CreateRotationX(0f)
-                * Matrix4x4.CreateRotationY(0f)
-                * Matrix4x4.CreateRotationZ(0.0001f)
-                * Matrix4x4.CreateScale(1.0f);
-
-            cmdList.UpdateBuffer(RenderContext.ModelBuffer, 0, ref modelMatrix);
-
             cmdList.SetVertexBuffer(0, _vertexBuffer);
             cmdList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
 

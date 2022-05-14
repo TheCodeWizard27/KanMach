@@ -33,7 +33,20 @@ namespace KanMach.Veldrid.Rendering
             commandList.UpdateBuffer(_context.ViewBuffer, 0, Camera.GetView());
             commandList.UpdateBuffer(_context.ProjectionBuffer, 0, Camera.GetPerspective());
 
-            meshRenderers.ForEach(renderer => renderer.Render(commandList));
+            foreach(var renderer in meshRenderers)
+            {
+                // TODO how to get transformation in 'ere?
+                var modelMatrix =
+                    Matrix4x4.CreateTranslation(0f, 0, -0.01f)
+                    * Matrix4x4.CreateRotationX(0f)
+                    * Matrix4x4.CreateRotationY(0f)
+                    * Matrix4x4.CreateRotationZ(0.0001f)
+                    * Matrix4x4.CreateScale(1.0f);
+
+                commandList.UpdateBuffer(_context.ModelBuffer, 0, ref modelMatrix);
+
+                renderer.Render(commandList);
+            }
 
             _context.EndDraw();
         }
