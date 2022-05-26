@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace KanMach.Core.Structures.Collision
 {
+    public enum BBCollisionType
+    {
+        Disjoint,
+        Contains,
+        Intersects
+    }
+
     public class BoundingBox
     {
         private Vector3 _min;
@@ -53,6 +60,35 @@ namespace KanMach.Core.Structures.Collision
             _min = min;
             _max = max;
             InitCorners();
+        }
+
+        public bool Contains(BoundingBox other)
+        {
+            return GetCollision(other) == BBCollisionType.Contains;
+        }
+        public bool Intersects(BoundingBox other)
+        {
+            return GetCollision(other) is BBCollisionType.Contains or BBCollisionType.Intersects;
+        }
+
+        public BBCollisionType GetCollision(BoundingBox other)
+        {
+            if (Max.X < other.Min.X || Min.X > other.Max.X
+               || Max.Y < other.Min.Y || Min.Y > other.Max.Y
+               || Max.Z < other.Min.Z || Min.Z > other.Max.Z)
+            {
+                return BBCollisionType.Disjoint;
+            }
+            else if (Min.X <= other.Min.X && Max.X >= other.Max.X
+                && Min.Y <= other.Min.Y && Max.Y >= other.Max.Y
+                && Min.Z <= other.Min.Z && Max.Z >= other.Max.Z)
+            {
+                return BBCollisionType.Contains;
+            }
+            else
+            {
+                return BBCollisionType.Intersects;
+            }
         }
 
         private void InitCorners()

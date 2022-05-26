@@ -10,8 +10,14 @@ namespace KanMach.Core.Structures
     public class OctreeLeaf<T>
     {
 
-        internal OctreeLeaf(BoundingBox boundingBox, int MaxChildren)
+        public BoundingBox BoundingBox { get; set; }
+
+        public T Item { get; set; }
+
+        internal OctreeLeaf(BoundingBox boundingBox, T item)
         {
+            BoundingBox = boundingBox;
+            Item = item;
         }
 
     }

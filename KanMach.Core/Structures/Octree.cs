@@ -14,11 +14,11 @@ namespace KanMach.Core.Structures
 
         public Octree(BoundingBox boundingBox, int maxChildren = 4)
         {
-            CurrentRoot = new OctreeNode<T>(boundingBox, maxChildren);
             _cache = new OctreeCache<T>();
+            CurrentRoot = new OctreeNode<T>(boundingBox, _cache, maxChildren);
         }
 
-        public void AddItem(BoundingBox itemBounds, T item)
+        public OctreeLeaf<T> AddItem(BoundingBox itemBounds, T item)
         {
             CurrentRoot.AddItem(itemBounds, item);
         }
