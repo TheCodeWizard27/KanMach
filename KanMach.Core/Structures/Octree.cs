@@ -20,7 +20,9 @@ namespace KanMach.Core.Structures
 
         public OctreeLeaf<T> AddItem(BoundingBox itemBounds, T item)
         {
-            CurrentRoot.AddItem(itemBounds, item);
+            var leaf = new OctreeLeaf<T>(itemBounds, item);
+            CurrentRoot = CurrentRoot.AddItem(leaf);
+            return leaf;
         }
 
     }

@@ -14,6 +14,7 @@ namespace KanMach.Core.Structures.Collision
         Intersects
     }
 
+    // TODO Change to struct?
     public class BoundingBox
     {
         private Vector3 _min;
