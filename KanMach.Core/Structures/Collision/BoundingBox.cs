@@ -14,53 +14,27 @@ namespace KanMach.Core.Structures.Collision
         Intersects
     }
 
-    // TODO Change to struct?
-    public class BoundingBox
+    public struct BoundingBox : IEquatable<BoundingBox>
     {
-        private Vector3 _min;
-        private Vector3 _max;
-
-        public Vector3 Min { get
-            {
-                return _min;
-            }
-            set
-            {
-                _min = value;
-                InitCorners();
-            }
-        }
-        public Vector3 Max
-        {
-            get
-            {
-                return _max;
-            }
-            set
-            {
-                _max = value;
-                InitCorners();
-            }
-        }
+        public Vector3 Min;
+        public Vector3 Max;
 
         public Vector3 Center { get => (Min + Max) / 2f; }
         public Vector3 Dimensions { get => Max - Min; }
 
-        public Vector3 NearTopLeft { get; private set; }
-        public Vector3 NearTopRight { get; private set; }
-        public Vector3 NearBottomLeft { get; private set; }
-        public Vector3 NearBottomRight { get; private set; }
-
-        public Vector3 FarTopLeft { get; private set; }
-        public Vector3 FarTopRight { get; private set; }
-        public Vector3 FarBottomLeft { get; private set; }
-        public Vector3 FarBottomRight { get; private set; }
+        public Vector3 NearBottomLeft { get => new Vector3(Min.X, Min.Y, Max.Z); }
+        public Vector3 NearBottomRight { get => new Vector3(Max.X, Min.Y, Max.Z); }
+        public Vector3 NearTopLeft { get => new Vector3(Min.X, Max.Y, Max.Z); }
+        public Vector3 NearTopRight { get => Max; }
+        public Vector3 FarBottomLeft { get => Min; }
+        public Vector3 FarBottomRight { get => new Vector3(Max.X, Min.Y, Min.Z); }
+        public Vector3 FarTopLeft { get => new Vector3(Min.X, Max.Y, Min.Z); }
+        public Vector3 FarTopRight { get => new Vector3(Max.X, Max.Y, Min.Z); }
 
         public BoundingBox(Vector3 min, Vector3 max)
         {
-            _min = min;
-            _max = max;
-            InitCorners();
+            Min = min;
+            Max = max;
         }
 
         public bool Contains(BoundingBox other)
@@ -92,18 +66,19 @@ namespace KanMach.Core.Structures.Collision
             }
         }
 
-        private void InitCorners()
+        public static bool operator !=(BoundingBox first, BoundingBox second)
         {
-            NearBottomLeft = new Vector3(Min.X, Min.Y, Max.Z);
-            NearBottomRight = new Vector3(Max.X, Min.Y, Max.Z);
-            NearTopLeft = new Vector3(Min.X, Max.Y, Max.Z);
-            NearTopRight = _max;
-
-            FarBottomLeft = _min;
-            FarBottomRight = new Vector3(Max.X, Min.Y, Min.Z);
-            FarTopLeft = new Vector3(Min.X, Max.Y, Min.Z);
-            FarTopRight = new Vector3(Max.X, Max.Y, Min.Z);
+            return !first.Equals(second);
         }
 
+        public static bool operator ==(BoundingBox first, BoundingBox second)
+        {
+            return first.Equals(second);
+        }
+
+        public bool Equals(BoundingBox other)
+        {
+            return Min == other.Min && Max == other.Max;
+        }
     }
 }

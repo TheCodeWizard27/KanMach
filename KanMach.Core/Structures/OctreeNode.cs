@@ -93,7 +93,7 @@ namespace KanMach.Core.Structures
             {
                 for(var y = -1f; y <= 1f; y += 2f)
                 {
-                    for(var z = -1f; y <= 1f; y += 2f)
+                    for(var z = -1f; z <= 1f; z += 2f)
                     {
                         var nodeCenter = center + (newDimension * new Vector3(x, y, z));
                         var min = nodeCenter - newDimension;
