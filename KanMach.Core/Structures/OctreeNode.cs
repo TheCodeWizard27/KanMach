@@ -74,6 +74,32 @@ namespace KanMach.Core.Structures
             return true;
         }
 
+        internal void AddChange(OctreeLeaf<T> changedLeaf)
+        {
+            _cache.AddChange(changedLeaf);
+        }
+
+        //internal OctreeNode<T> ResolveChanges(OctreeLeaf<T> leaf)
+        //{
+        //    if(BoundingBox.Contains(leaf.BoundingBox))
+        //    {
+        //        foreach(var child in _children)
+        //        {
+        //            if(child.TryToAddLeaf(leaf))
+        //            {
+        //                _leafs.Remove(leaf);
+        //                break;
+        //            }
+        //        }
+        //    }else
+        //    {
+        //        _leafs.Remove(leaf);
+
+        //        //if(// parent null handle)
+        //        //var newRoot = ResizeRootNode(leaf);
+        //    }
+        //}
+
         private OctreeNode<T> GetContainingNode(BoundingBox bounds)
         {
             foreach(OctreeNode<T> node in _children)

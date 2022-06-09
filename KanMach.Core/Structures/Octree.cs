@@ -25,5 +25,14 @@ namespace KanMach.Core.Structures
             return leaf;
         }
 
+        public void ResolveChanges()
+        {
+            foreach(var leaf in _cache.CollectChanges())
+            {
+                leaf.oof
+
+            }
+        }
+
     }
 }
