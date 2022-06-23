@@ -29,8 +29,17 @@ namespace KanMach.Core.Structures
 
         internal OctreeLeaf(BoundingBox boundingBox, T item)
         {
+            Init(boundingBox, item);
+        }
+
+        // Moving constructor code to a method makes handling pools easier.
+        internal OctreeLeaf<T> Init(BoundingBox boundingBox, T item)
+        {
+            Node = null;
             _boundingBox = boundingBox;
             Item = item;
+
+            return this;
         }
 
     }

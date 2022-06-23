@@ -29,20 +29,20 @@ namespace KanMach.Sample
         {
             Console.WriteLine("Started KanMach");
 
-            var octree = new Octree<Test>(new BoundingBox(new Vector3(0,0,0), new Vector3(1,1,1)));
-            octree.AddItem(new BoundingBox(new Vector3(0.5f, 0.5f, 0.5f), new Vector3(0.6f, 0.6f, 0.6f)), new Test("First"));
-            octree.AddItem(new BoundingBox(new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(0.6f, 0.6f, 0.6f)), new Test("Second"));
+            //var octree = new Octree<Test>(new BoundingBox(new Vector3(0,0,0), new Vector3(1,1,1)));
+            //octree.AddLeaf(new BoundingBox(new Vector3(0.5f, 0.5f, 0.5f), new Vector3(0.6f, 0.6f, 0.6f)), new Test("First"));
+            //octree.AddLeaf(new BoundingBox(new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(0.6f, 0.6f, 0.6f)), new Test("Second"));
 
-            //var engineBuilder = KanGameEngineBuilder
-            //    .CreateDefaultBuilder()
-            //    .SetStartup<Startup>()
-            //    .Build();
+            var engineBuilder = KanGameEngineBuilder
+                .CreateDefaultBuilder()
+                .SetStartup<Startup>()
+                .Build();
 
-            ////engineBuilder.Run<InputSampleController>();
-            ////engineBuilder.Run<EcsHierarchyController>();
-            ////engineBuilder.Run<SystemSampleController>();
-            ////engineBuilder.Run<EcsSampleController>();
-            //engineBuilder.Run<GraphicsSampleController>();
+            //engineBuilder.Run<InputSampleController>();
+            //engineBuilder.Run<EcsHierarchyController>();
+            //engineBuilder.Run<SystemSampleController>();
+            //engineBuilder.Run<EcsSampleController>();
+            engineBuilder.Run<GraphicsSampleController>();
 
             Console.WriteLine("Program exited successfully");
             Console.ReadLine();

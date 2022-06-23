@@ -14,8 +14,8 @@ namespace KanMach.Core.Structures
 
         private OctreeCache<T> _cache;
         
-        private List<OctreeLeaf<T>> _leafs;
-        private List<OctreeNode<T>> _children;
+        private List<OctreeLeaf<T>> _leafs = new List<OctreeLeaf<T>>();
+        private List<OctreeNode<T>> _children = new List<OctreeNode<T>>();
         
         public OctreeNode<T> Parent { get; internal set; } 
         public BoundingBox BoundingBox { get; internal set; }
@@ -24,22 +24,48 @@ namespace KanMach.Core.Structures
 
         internal OctreeNode(BoundingBox boundingBox, OctreeCache<T> cache, int maxLeafs)
         {
+            Init(boundingBox, cache, maxLeafs);
+        }
+
+        // Moving constructor code to a method makes handling pools easier.
+        internal OctreeNode<T> Init(BoundingBox boundingBox, OctreeCache<T> cache, int maxLeafs)
+        {
             _cache = cache;
+            Parent = null;
             MaxLeafs = maxLeafs;
             BoundingBox = boundingBox;
 
-            _children = new List<OctreeNode<T>>();
-            _leafs = new List<OctreeLeaf<T>>();
+            _children.Clear();
+            _leafs.Clear();
+
+            return this;
         }
 
-        internal OctreeNode<T> AddItem(OctreeLeaf<T> leaf)
+        public int GetTotalLeafs()
+        {
+            var leafCount = _leafs.Count;
+            foreach(var child in _children)
+            {
+                leafCount += child.GetTotalLeafs();
+            }
+
+            return leafCount;
+        }
+
+        internal OctreeNode<T> AddLeaf(OctreeLeaf<T> leaf)
         {
             var root = this;
             
-            if (!TryToAddLeaf(leaf))
-                root = ResizeRootNode(leaf);
+            if (!TryToAddLeaf(leaf)) 
+                root = ResizeRootAndAdd(leaf);
 
             return root;
+        }
+
+        internal void RemoveLeaf(OctreeLeaf<T> leaf)
+        {
+            _leafs.Remove(leaf);
+            _cache.RecycleLeaf(leaf);
         }
 
         /// <summary>
@@ -71,6 +97,7 @@ namespace KanMach.Core.Structures
             }
 
             _leafs.Add(leaf);
+            leaf.Node = this;
             return true;
         }
 
@@ -79,26 +106,101 @@ namespace KanMach.Core.Structures
             _cache.AddChange(changedLeaf);
         }
 
-        //internal OctreeNode<T> ResolveChanges(OctreeLeaf<T> leaf)
-        //{
-        //    if(BoundingBox.Contains(leaf.BoundingBox))
-        //    {
-        //        foreach(var child in _children)
-        //        {
-        //            if(child.TryToAddLeaf(leaf))
-        //            {
-        //                _leafs.Remove(leaf);
-        //                break;
-        //            }
-        //        }
-        //    }else
-        //    {
-        //        _leafs.Remove(leaf);
+        internal OctreeNode<T> ResolveChanges(OctreeLeaf<T> leaf)
+        {
+            if (BoundingBox.Contains(leaf.BoundingBox))
+            {
+                foreach (var child in _children)
+                {
+                    if (child.TryToAddLeaf(leaf))
+                    {
+                        _leafs.Remove(leaf);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                _leafs.Remove(leaf);
 
-        //        //if(// parent null handle)
-        //        //var newRoot = ResizeRootNode(leaf);
-        //    }
-        //}
+                if (Parent == null)
+                    return ResizeRootAndAdd(leaf);
+
+                Parent.TryToAddLeaf(leaf);
+            }
+
+            return this;
+        }
+
+        internal OctreeNode<T> TryTrimChildren()
+        {
+            if (_leafs.Any())
+            {
+                OctreeNode<T> loneChild = null;
+                foreach (var child in _children)
+                {
+                    if (child.GetTotalLeafs() == 0) continue;
+
+                    if (loneChild != null) return this;
+
+                    loneChild = child;
+                }
+
+                if(loneChild != null)
+                {
+                    foreach(var child in _children)
+                    {
+                        if (child == loneChild) continue;
+
+                        child.Recycle();
+                    }
+                }
+
+                Recycle(false);
+                loneChild.Parent = null;
+                return loneChild;
+            }
+
+            return this;
+        }
+
+        internal void ConsiderConsolidation()
+        {
+            if(_children.Count > 0 && GetTotalLeafs() < MaxLeafs)
+            {
+                ConsolidateChildren();
+                Parent?.ConsiderConsolidation();
+            }
+        }
+
+        internal void Recycle(bool recycleChildren = true)
+        {
+            if(recycleChildren) RecycleChildren();
+
+            _cache.RecycleNode(this);
+        }
+
+        internal void RecycleChildren()
+        {
+            foreach(var child in _children)
+            {
+                child.Recycle();
+            }
+        }
+
+        private void ConsolidateChildren()
+        {
+            foreach(var child in _children)
+            {
+                child.ConsolidateChildren();
+
+                foreach(var leaf in child._leafs)
+                {
+                    _leafs.Add(leaf);
+                    leaf.Node = this;
+                }
+            }
+        }
 
         private OctreeNode<T> GetContainingNode(BoundingBox bounds)
         {
@@ -134,7 +236,7 @@ namespace KanMach.Core.Structures
                         }
                         else
                         {
-                            node = new OctreeNode<T>(nodeBounds, _cache, MaxLeafs);
+                            node = _cache.NewNode(nodeBounds, MaxLeafs);
                         }
 
                         _children.Add(node);
@@ -159,7 +261,7 @@ namespace KanMach.Core.Structures
 
         }
 
-        private OctreeNode<T> ResizeRootNode(OctreeLeaf<T> leaf)
+        private OctreeNode<T> ResizeRootAndAdd(OctreeLeaf<T> leaf)
         {
             // Get expand direction. Expand 0.5 in front and back of direction. split root.
             var oldRoot = this;
@@ -174,7 +276,8 @@ namespace KanMach.Core.Structures
             newCenter.Z += expandDirection.Z >= 0 ? halfDimension.Z : -halfDimension.Z;
             var newMin = newCenter - halfDimension * 2f;
             var newMax = newCenter + halfDimension * 2f;
-            var newRoot = new OctreeNode<T>(new BoundingBox(newMin, newMax), _cache, MaxLeafs);
+
+            var newRoot = _cache.NewNode(new BoundingBox(newMin, newMax), MaxLeafs);
             newRoot.SplitNode(oldRoot);
             newRoot.TryToAddLeaf(leaf);
 
