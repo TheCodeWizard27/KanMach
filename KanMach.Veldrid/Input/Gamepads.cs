@@ -1,5 +1,6 @@
 ﻿using KanMach.Veldrid.Input.SDL_Mapping;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +11,7 @@ using Veldrid.Sdl2;
 
 namespace KanMach.Veldrid.Input
 {
-    public class Gamepads
+    public class Gamepads : IEnumerable<Gamepad>
     {
         internal static readonly UInt32 SDL_INIT_JOYSTICK = 0x00000200u;
 
@@ -146,5 +147,14 @@ namespace KanMach.Veldrid.Input
 
         }
 
+        public IEnumerator<Gamepad> GetEnumerator()
+        {
+            return this._connectedGamepads.Select(x => x.Value).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

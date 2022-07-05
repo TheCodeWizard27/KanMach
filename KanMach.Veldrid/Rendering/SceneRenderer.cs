@@ -14,16 +14,17 @@ namespace KanMach.Veldrid.Rendering
         private RenderContext _context;
 
         public Camera Camera { get; set; }
+        public Vector2 ViewPort { get; private set; }
 
         public SceneRenderer(RenderContext context)
         {
             _context = context;
 
-            var viewport = new Vector2(
+            ViewPort = new Vector2(
                 context.GraphicsDevice.SwapchainFramebuffer.Width, 
                 context.GraphicsDevice.SwapchainFramebuffer.Height);
 
-            Camera = new Camera(viewport);
+            Camera = new Camera(ViewPort);
         }
 
         public void Draw(IEnumerable<MeshRenderer> meshRenderers)

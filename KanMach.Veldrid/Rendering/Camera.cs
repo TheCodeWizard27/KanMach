@@ -14,7 +14,6 @@ namespace KanMach.Veldrid.Graphics
         public float Fov { get; set; }
         public float Near { get; set; }
         public float Far { get; set; }
-        public Vector3 Direction { get; set; }
         public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
         public Vector3 Target { get; set; } = new Vector3(0, 0, 1);
         public Vector3 CameraUp { get; set; } = new Vector3(0, 1, 0);
@@ -25,7 +24,6 @@ namespace KanMach.Veldrid.Graphics
         {
 
             Position = new Vector3(0f, -1f, -2f);
-            Direction = Vector3.Normalize(Position - Target);
 
             Near = 0.1F;
             Far = 100F;
