@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KanMach.Veldrid.Rendering.Structures;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -9,10 +10,10 @@ namespace KanMach.Veldrid.Model
 {
     public class Mesh
     {
-        public Vector3[] Vertices { get; set; }
-        public ushort[] Indices { get; set; }
+        public VertexData[] Vertices { get; set; }
+        public uint[] Indices { get; set; }
 
-        public Mesh(Vector3[] vertices, ushort[] indices)
+        public Mesh(VertexData[] vertices, uint[] indices)
         {
             Vertices = vertices;
             Indices = indices;

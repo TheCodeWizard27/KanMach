@@ -11,53 +11,82 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Numerics;
 using KanMach.Veldrid.Graphics;
+using System.IO;
+using KanMach.Core.FileManager;
+using KanMach.Veldrid.Model;
+using KanMach.Veldrid.EmbeddedShaders;
 
 namespace KanMach.Sample
 {
 
     public class GraphicsSampleController : KanGameController
     {
+
         private readonly IVeldridService _veldridService;
+        private readonly AssetLoader<FileSourceHandler> _assetLoader;
+
         private EcsWorld _ecsWorld;
         private SceneRenderer _renderer;
         private FirstPersonCamera _camera;
         private Sdl2InputManager _inputManager;
+        private RenderMeshView _renderMeshView;
 
         private double CAMERA_MIN_Y_ROT = -89 * Math.PI / 180;
         private double CAMERA_MAX_Y_ROT = 89 * Math.PI / 180;
 
-        private List<Gamepad> _gamepads;
-
-        public GraphicsSampleController(IVeldridService veldridService, Sdl2InputManager inputManager)
+        public GraphicsSampleController(
+            IVeldridService veldridService,
+            AssetLoader<FileSourceHandler> assetLoader,
+            Sdl2InputManager inputManager)
         {
             _veldridService = veldridService;
+            _assetLoader = assetLoader;
             _inputManager = inputManager;
         }
 
         public override void Init()
         {
-            _gamepads = _inputManager.Gamepads.ToList();
-            _inputManager.Gamepads.OnConnect += (gamepad) =>
-            {
-                _gamepads.Add(gamepad);
-                Console.WriteLine("Gamepad Connected");
-            };
-            _inputManager.Gamepads.OnDisconnect += (gamepad) =>
-            {
-                _gamepads.Remove(gamepad);
-            };
+            // maps are not saved on git.
+            var importedMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/cube.dae");
 
             _ecsWorld = new EcsWorld();
 
-            var testObj = _ecsWorld.NewEntity();
-            var transform = testObj.Get<Transform>();
-            ref var renderMesh = ref testObj.Get<RenderMesh>();
+            importedMeshes.ForEach((mesh) =>
+            {
+                var entity = _ecsWorld.NewEntity();
+                ref var transform = ref entity.Get<Transform>();
+                transform.Scale = new Vector3(1.0f, 1.0f, 1.0f);
+                transform.Rotation.X = (float)(180 * Math.PI / 180);
 
-            // TODO implement ressource factory of some kind.
-            renderMesh.Renderer = _veldridService.LoadTestMesh();
+                ref var renderMesh = ref entity.Get<RenderMesh>();
 
+                renderMesh.Renderer = new MeshRenderer(
+                    _veldridService.RenderContext,
+                    mesh,
+                    PhongMaterial.GetInstance(_veldridService.RenderContext));
+
+                var light = _ecsWorld.NewEntity();
+                ref var lightTransform = ref light.Get<Transform>();
+                lightTransform.Position = new Vector3(2, 0, 30);
+                lightTransform.Scale = new Vector3(0.1f);
+                lightTransform.Rotation.X = (float)(180 * Math.PI / 180);
+
+                ref var lightRenderMesh = ref light.Get<RenderMesh>();
+                var lightMaterial = BasicMaterial.GetInstance(_veldridService.RenderContext);
+                lightMaterial.Color = new Vector3(0, 1, 2);
+
+                lightRenderMesh.Renderer = new MeshRenderer(
+                    _veldridService.RenderContext,
+                    mesh,
+                    lightMaterial
+                    );
+            });
+                        
             _renderer = new SceneRenderer(_veldridService.RenderContext);
             _renderer.Camera = _camera = new FirstPersonCamera(_renderer.ViewPort);
+            _camera.Position = new Vector3(0, 0, 2);
+
+            _renderMeshView = _ecsWorld.View<RenderMeshView>();
 
         }
 
@@ -65,36 +94,12 @@ namespace KanMach.Sample
         {
             _veldridService.PumpEvents();
             
-            var deltaS = delta.Ticks/1000000f;
+            // Maybe clean this up and also drossle the
+            // engine so that it doesn't run at unlimited speed all the time.
+            var deltaValue = delta.Ticks/1000000f;
+            UpdateFpsCamera(deltaValue);
 
-            _gamepads.ForEach(gamepad =>
-            {
-                var rStickMovement = GetDeadZoneValue(gamepad.RightStick);
-
-                var xRot = _camera.Rotation.X + -rStickMovement.X * deltaS;
-                var yRot = (float) Math.Min(
-                    Math.Max(_camera.Rotation.Y + rStickMovement.Y * deltaS, CAMERA_MIN_Y_ROT), CAMERA_MAX_Y_ROT);
-                _camera.Rotation = new Vector2(xRot, yRot);
-                Console.WriteLine(rStickMovement);
-
-                var lStickMovement = GetDeadZoneValue(gamepad.LeftStick);
-
-                var dirMatrix = Matrix4x4.CreateFromYawPitchRoll(_camera.Rotation.X, _camera.Rotation.Y, 0);
-                var dir = new Vector3(-lStickMovement.X * deltaS, 0, -lStickMovement.Y * deltaS);
-
-                //Console.WriteLine($"{xMovement} {yMovement}");
-                _renderer.Camera.Position += Vector3.Transform(dir, dirMatrix);
-            });
-
-            var meshes = new List<MeshRenderer>();
-
-            var view = _ecsWorld.View<RenderMeshView>();
-            //foreach (ViewEntity<Transform, RenderMesh> entity in view)
-            //{
-            //    Console.WriteLine($"Entity {entity.Entity} is at {entity.Component1.Pos}");
-            //}
-
-            _renderer.Draw(view.Select(entity => entity.Component2.Renderer));
+            _renderer.Draw(_renderMeshView.Select(entity => (entity.Component2.Renderer, entity.Component1)));
 
         }
 
@@ -103,22 +108,29 @@ namespace KanMach.Sample
             _veldridService.DisposeResources();
         }
 
-        private Vector2 GetDeadZoneValue(Vector2 pos)
+        private void UpdateFpsCamera(float deltaValue)
         {
-            var xMovement = pos.X > 0.2 || pos.X < -0.2 ? pos.X : 0;
-            var yMovement = pos.Y > 0.2 || pos.Y < -0.2 ? pos.Y : 0;
+            _inputManager.Gamepads.ToList().ForEach(gamepad =>
+            {
+                var rStickMovement = gamepad.RightStick;
 
-            return new Vector2(xMovement, yMovement);
+                var xRot = _camera.Rotation.X + rStickMovement.X * deltaValue;
+                var yRot = (float)Math.Min(
+                    Math.Max(_camera.Rotation.Y + rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT), CAMERA_MAX_Y_ROT);
+                _camera.Rotation = new Vector2(xRot, yRot);
+
+                var lStickMovement = gamepad.LeftStick;
+
+                var dirMatrix = Matrix4x4.CreateFromYawPitchRoll(_camera.Rotation.X, _camera.Rotation.Y, 0);
+                var dir = new Vector3(-lStickMovement.X * deltaValue, 0, lStickMovement.Y * deltaValue);
+
+                _renderer.Camera.Position += Vector3.Transform(dir, dirMatrix);
+            });
         }
 
         internal struct RenderMesh
         {
             public MeshRenderer Renderer;
-        }
-
-        internal struct Transform
-        {
-            public Vector3 Pos;
         }
 
         internal class RenderMeshView : EcsView<Transform, RenderMesh>
@@ -132,5 +144,6 @@ namespace KanMach.Sample
             }
 
         }
+
     }
 }

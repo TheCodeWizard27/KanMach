@@ -52,6 +52,11 @@ namespace KanMach.Core.Ecs
             return id;
         }
 
+        public void Set(int id, ref T value)
+        {
+            Components[id] = value;
+        }
+
         public void Recycle(int id)
         {
             _freeComponents.Add(id);

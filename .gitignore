@@ -348,3 +348,7 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/KanMach.Sample/SampleModels/donut.glb
+/KanMach.Sample/SampleModels/donut.dae
+/KanMach.Sample/SampleModels/darksouls.dae
+/KanMach.Sample/SampleModels/cube.dae

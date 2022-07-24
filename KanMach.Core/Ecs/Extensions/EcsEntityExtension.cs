@@ -39,6 +39,36 @@ namespace KanMach.Core.Ecs.Extensions
             return ref componentPool.GetItem(id);
         }
 
+
+        public static void Set<T>(in this Entity entity, ref T value) where T : struct
+        {
+            ref var entityData = ref entity.World.GetEntityData(entity);
+
+            var typeId = ComponentType<T>.TypeId;
+
+            for (var i = 0; i < entityData.ComponentIndex; i++)
+            {
+                if (entityData.ComponentTypes[i] != typeId) continue;
+                var pool = (ComponentPool<T>)entity.World.ComponentPools[typeId];
+                pool.Set(entityData.ComponentIds[i], ref value);
+            }
+
+            if (entityData.ComponentIndex == entityData.ComponentIds.Length)
+            {
+                Array.Resize(ref entityData.ComponentIds, entityData.ComponentIndex * 2);
+                Array.Resize(ref entityData.ComponentTypes, entityData.ComponentIndex * 2);
+            }
+            var componentPool = entity.World.GetPool<T>();
+            var id = componentPool.New();
+
+            entityData.ComponentTypes[entityData.ComponentIndex] = typeId;
+            entityData.ComponentIds[entityData.ComponentIndex] = id;
+            entityData.ComponentIndex++;
+
+            entity.World.AddComponentsToView(typeId, entity, entityData);
+
+            componentPool.Set(id, ref value);
+        }
         public static bool Has<T>(in this Entity entity) where T : struct
         {
             ref var entityData = ref entity.World.GetEntityData(entity);

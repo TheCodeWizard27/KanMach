@@ -47,9 +47,9 @@ namespace KanMach.Veldrid.Model.Src
             };
             return vertices;
         }
-        public static ushort[] GetCubeIndices()
+        public static uint[] GetCubeIndices()
         {
-            ushort[] indices = {
+            uint[] indices = {
                 0,1,2, 0,2,3,
                 4,5,6, 4,6,7,
                 8,9,10, 8,10,11,

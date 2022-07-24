@@ -17,10 +17,7 @@ namespace KanMach.Core.FileManager
             var assetLoader = new AssetLoader(loaderOptions);
             services.AddSingleton(assetLoader);
 
-            loaderOptions.Sources.ForEach(source =>
-            {
-                services.AddScoped(typeof(AssetLoader<>));
-            });
+            services.AddScoped(typeof(AssetLoader<>));
 
             return services;
         }

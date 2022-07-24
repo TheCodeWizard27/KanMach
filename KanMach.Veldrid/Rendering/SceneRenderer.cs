@@ -27,26 +27,26 @@ namespace KanMach.Veldrid.Rendering
             Camera = new Camera(ViewPort);
         }
 
-        public void Draw(IEnumerable<MeshRenderer> meshRenderers)
+        public void Draw(IEnumerable<(MeshRenderer, Transform)> meshRenderers)
         {
             var commandList = _context.BeginDraw();
 
             commandList.UpdateBuffer(_context.ViewBuffer, 0, Camera.GetView());
             commandList.UpdateBuffer(_context.ProjectionBuffer, 0, Camera.GetPerspective());
 
-            foreach(var renderer in meshRenderers)
+            foreach(var model in meshRenderers)
             {
                 // TODO how to get transformation in 'ere?
                 var modelMatrix =
-                    Matrix4x4.CreateTranslation(0f, 0, -0.01f)
-                    * Matrix4x4.CreateRotationX(0f)
-                    * Matrix4x4.CreateRotationY(0f)
-                    * Matrix4x4.CreateRotationZ(0.0001f)
-                    * Matrix4x4.CreateScale(1.0f);
+                    Matrix4x4.CreateTranslation(model.Item2.Position)
+                    * Matrix4x4.CreateRotationX(model.Item2.Rotation.X)
+                    * Matrix4x4.CreateRotationY(model.Item2.Rotation.Y)
+                    * Matrix4x4.CreateRotationZ(model.Item2.Rotation.Z)
+                    * Matrix4x4.CreateScale(model.Item2.Scale);
 
                 commandList.UpdateBuffer(_context.ModelBuffer, 0, ref modelMatrix);
 
-                renderer.Render(commandList);
+                model.Item1.Render(commandList);
             }
 
             _context.EndDraw();

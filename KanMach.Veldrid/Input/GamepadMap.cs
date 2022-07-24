@@ -91,49 +91,52 @@ namespace KanMach.Veldrid.Input
             _valueResolvers.ForEach((resolver) => {
                 var value = resolver.Resolver(handle);
 
+                // Cleanup Axis assigning code a bit maybe. It is quite ugly right now.
                 switch(resolver.Event)
                 {
                     case "-" + GamepadEvent.LEFT_X:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickLeft : 0;
-                        state.Left.X += value.AxisValue;
+                        state.Left.X += value.AxisValue <= -VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case "+" + GamepadEvent.LEFT_X:
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickRight : 0;
-                        state.Left.X += value.AxisValue;
+                        state.Left.X += value.AxisValue >= VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case "-" + GamepadEvent.LEFT_Y:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickUp : 0;
-                        state.Left.Y += value.AxisValue;
+                        state.Left.Y += value.AxisValue <= -VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case "+" + GamepadEvent.LEFT_Y:
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickDown : 0;
-                        state.Left.Y += value.AxisValue;
+                        state.Left.Y += value.AxisValue >= VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case "-" + GamepadEvent.RIGHT_X:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickLeft : 0;
-                        state.Right.X += value.AxisValue;
+                        state.Right.X += value.AxisValue <= -VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case "+" + GamepadEvent.RIGHT_X:
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickRight : 0;
-                        state.Right.X += value.AxisValue;
+                        state.Right.X += value.AxisValue >= VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case "-" + GamepadEvent.RIGHT_Y:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickUp : 0;
-                        state.Right.Y += value.AxisValue;
+                        state.Right.Y += value.AxisValue <= -VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case "+" + GamepadEvent.RIGHT_Y:
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickDown : 0;
-                        state.Right.Y += value.AxisValue;
+                        state.Right.Y += value.AxisValue >= VALUE_SENSITIVITY ? value.AxisValue : 0;
                         break;
                     case GamepadEvent.LEFT_X:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickLeft : 0;
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickRight : 0;
-                        state.Left.X = value.AxisValue;
+                        state.Left.X = value.AxisValue <= -VALUE_SENSITIVITY || value.AxisValue >= VALUE_SENSITIVITY 
+                            ? value.AxisValue : 0;
                         break;
                     case GamepadEvent.LEFT_Y:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickUp : 0;
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.LeftThumbstickDown : 0;
-                        state.Left.Y = value.AxisValue;
+                        state.Left.Y = value.AxisValue <= -VALUE_SENSITIVITY || value.AxisValue >= VALUE_SENSITIVITY 
+                            ? value.AxisValue : 0;
                         break;
                     case GamepadEvent.LEFT_STICK:
                         state.Buttons |= value.IsPressed() ? GamepadButton.LeftStick : 0;
@@ -141,12 +144,14 @@ namespace KanMach.Veldrid.Input
                     case GamepadEvent.RIGHT_X:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickLeft : 0;
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickRight : 0;
-                        state.Right.X = value.AxisValue;
+                        state.Right.X = value.AxisValue <= -VALUE_SENSITIVITY || value.AxisValue >= VALUE_SENSITIVITY 
+                            ? value.AxisValue : 0;
                         break;
                     case GamepadEvent.RIGHT_Y:
                         state.Buttons |= value.AxisValue <= -VALUE_SENSITIVITY ? GamepadButton.RightThumbstickUp : 0;
                         state.Buttons |= value.AxisValue >= VALUE_SENSITIVITY ? GamepadButton.RightThumbstickDown : 0;
-                        state.Right.Y = value.AxisValue;
+                        state.Right.Y = value.AxisValue <= -VALUE_SENSITIVITY || value.AxisValue >= VALUE_SENSITIVITY
+                            ? value.AxisValue : 0;
                         break;
                     case GamepadEvent.RIGHT_STICK:
                         state.Buttons |= value.IsPressed() ? GamepadButton.RightStick : 0;

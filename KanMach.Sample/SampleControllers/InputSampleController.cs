@@ -39,7 +39,7 @@ namespace KanMach.Sample
         {
 
             _veldridService.PumpEvents();
-            _veldridService.Draw();
+            //_veldridService.Draw();
 
         }
 

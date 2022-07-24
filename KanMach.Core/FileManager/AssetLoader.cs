@@ -18,7 +18,7 @@ namespace KanMach.Core.FileManager
             _processors = options.Processors;
         }
 
-        public T Load<T>(Stream stream)
+        public T Load<T>(Stream stream, string path = "")
         {
             _processors.TryGetValue(typeof(T), out var processor);
 
@@ -27,7 +27,7 @@ namespace KanMach.Core.FileManager
                 throw new InvalidOperationException($"No asset process for type {typeof(T)} configured.");
             }
 
-            return (T) processor.ProcessObject(stream);
+            return (T) processor.ProcessObject(stream, path);
         }
 
     }

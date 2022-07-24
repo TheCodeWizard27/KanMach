@@ -30,7 +30,7 @@ namespace KanMach.Veldrid.Graphics
         {
             var forward = new Vector3(0, 0, 1);
             var transform = Matrix4x4.CreateFromYawPitchRoll(rotation.X, rotation.Y, 0);
-            Target = Position + Vector3.Transform(forward, transform);
+            Target = Position - Vector3.Transform(forward, transform);
         }
 
     } 

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
 
@@ -22,16 +22,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="EmbeddedShaders\BasicShader.frag" />
-    <None Remove="EmbeddedShaders\BasicShader.vert" />
+    <None Remove="Rendering\EmbeddedShaders\Basic.frag" />
+    <None Remove="Rendering\EmbeddedShaders\Basic.vert" />
+    <None Remove="Rendering\EmbeddedShaders\Phong.frag" />
+    <None Remove="Rendering\EmbeddedShaders\Phong.vert" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="EmbeddedShaders\BasicShader.frag" />
-    <EmbeddedResource Include="EmbeddedShaders\BasicShader.vert" />
+    <EmbeddedResource Include="Rendering\EmbeddedShaders\Basic.frag" />
+    <EmbeddedResource Include="Rendering\EmbeddedShaders\Basic.vert" />
+    <EmbeddedResource Include="Rendering\EmbeddedShaders\Phong.frag" />
+    <EmbeddedResource Include="Rendering\EmbeddedShaders\Phong.vert" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
     <PackageReference Include="Veldrid" Version="4.8.0" />
     <PackageReference Include="Veldrid.ImGui" Version="5.72.0" />
     <PackageReference Include="Veldrid.SDL2" Version="4.8.0" />

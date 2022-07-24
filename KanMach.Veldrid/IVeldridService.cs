@@ -19,13 +19,8 @@ namespace KanMach.Veldrid
 
         void Close();
         void DisposeResources();
-        void CreateResources();
         void Init();
 
-        // TODO there will be need for some ressource part that can create objects like this.
-        MeshRenderer LoadTestMesh();
-
-        void Draw();
         void PumpEvents();
     }
 }

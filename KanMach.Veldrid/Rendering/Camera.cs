@@ -16,7 +16,7 @@ namespace KanMach.Veldrid.Graphics
         public float Far { get; set; }
         public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
         public Vector3 Target { get; set; } = new Vector3(0, 0, 1);
-        public Vector3 CameraUp { get; set; } = new Vector3(0, 1, 0);
+        public Vector3 CameraUp { get; set; } = new Vector3(0, -1, 0);
 
         public Vector2 Viewport { get; set; }
 
