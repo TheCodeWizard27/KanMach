@@ -15,20 +15,25 @@ layout (set = 0, binding = 2) uniform ProjectionBuffer
     mat4 Projection;
 };
 
+layout (set = 0, binding = 3) uniform LightPos {
+    vec3 vs_in_LightPos;
+};
+
 layout (location = 0) in vec3 Position;
 layout (location = 1) in vec3 Normal;
+layout (location = 2) in vec2 UV;
 
-layout (location = 0) out vec3 v_out_normal;
-layout (location = 1) out vec3 v_out_position;
-layout (location = 2) out vec3 v_out_lightPos;
+layout (location = 0) out vec3 vs_out_FragPos;
+layout (location = 1) out vec3 vs_out_Normal;
+layout (location = 2) out vec3 vs_out_LightPos;
 
 void main()
-{
-    mat4 pvm = Projection * View * Model;
-    
-    gl_Position = pvm * vec4(Position, 1);
-    v_out_normal = Normal;
-    v_out_position = vec3(Model * vec4(Position, 1.0));
-    v_out_lightPos = vec3(1,0,0);
+{ 
+   
+    gl_Position = Projection * View * Model * vec4(Position, 1);
+
+    vs_out_FragPos = vec3(View * Model * vec4(Position, 1));
+    vs_out_Normal = vec3(mat3(transpose(inverse(Model))) * Normal);
+    vs_out_LightPos = vec3(View * vec4(vs_in_LightPos, 1));
 
 }

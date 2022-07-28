@@ -1,4 +1,5 @@
 ﻿using KanMach.Veldrid.Components;
+using KanMach.Veldrid.Rendering.Structures;
 using KanMach.Veldrid.Util;
 using System;
 using System.Collections.Generic;
@@ -42,10 +43,8 @@ namespace KanMach.Veldrid.EmbeddedShaders
             _shaderSet = new ShaderSetDescription(
                 new[]
                 {
-                    new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
-                        new VertexElementDescription("Normal", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
-                        new VertexElementDescription("UV", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
+                    new VertexLayoutDescription(VertexData.SizeInBytes,
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3))
                 }, shader.Shaders);
 
             Pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
@@ -90,7 +89,7 @@ namespace KanMach.Veldrid.EmbeddedShaders
             Pipeline.Dispose();
         }
 
-        public static BasicMaterial GetInstance(RenderContext context)
+        public static BasicMaterial NewInstance(RenderContext context)
         {
             if(_basicShader == null)
             {

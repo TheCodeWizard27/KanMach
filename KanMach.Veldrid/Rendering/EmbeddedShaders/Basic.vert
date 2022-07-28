@@ -22,5 +22,4 @@ void main()
     mat4 pvm = Projection * View * Model;
     
     gl_Position = pvm * vec4(Position, 1);
-
 }

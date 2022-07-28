@@ -1,34 +1,42 @@
 ﻿#version 450
 
+layout (set = 0, binding = 4) uniform LightColor {
+    vec3 fs_in_LightColor;
+};
 
-layout (location = 0) in vec3 v_out_normal;
-layout (location = 1) in vec3 v_out_position;
-layout (location = 2) in vec3 v_out_lightPos;
+layout (location = 0) in vec3 fs_in_FragPos;
+layout (location = 1) in vec3 fs_in_Normal;
+layout (location = 2) in vec3 fs_in_LightPos;
 
-layout (location = 0) out vec4 f_out_color;
+layout (location = 0) out vec4 fs_out_Color;
+
+vec3 getDiffuseColor(vec3 normal, vec3 lightDir, vec3 lightColor) {
+    float diffuse = max(dot(normal, lightDir), 0);
+    return diffuse * lightColor;
+}
+
+// Everything needs to be in view space.
+vec3 getSpecularColor(vec3 normal, vec3 lightDir, vec3 viewDir, vec3 lightColor) {
+    float specularStrength = 0.5;
+
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float specular = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    return specularStrength * specular * lightColor;
+}
 
 void main()
 {
-    vec3 lightColor = vec3(1);
-
-    vec3 norm = normalize(v_out_normal);
-    vec3 lightDir = normalize(v_out_lightPos - v_out_position);
-
-    // Diffuse calculation
-    vec3 ambient = vec3(0.8, 0.8, 0.8);
-
-    float diffuse = max(dot(norm, v_out_lightPos), 0);
-    vec3 diffuseColor = diffuse * lightColor;
-
-    // Specular calculation
-    float specularStrength = 0.5;
-
-    vec3 viewDir = normalize(vec3(0,0,0) - v_out_position);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lightColor;
-
+    vec3 ambientColor = vec3(0.4, 0.4, 0.4);
     vec3 objectColor = vec3(0,0.4,0.8);
 
-    f_out_color =  vec4((ambient + diffuseColor + specular) * objectColor, 1);
+    vec3 normal = normalize(fs_in_Normal);
+    vec3 lightDir = normalize(fs_in_LightPos - fs_in_FragPos);
+
+    vec3 diffuseColor = getDiffuseColor(normal, lightDir, fs_in_LightColor);
+
+    vec3 viewDir = normalize(-fs_in_FragPos);
+    vec3 specularColor = getSpecularColor(normal, lightDir, viewDir, fs_in_LightColor);
+
+    fs_out_Color =  vec4((ambientColor + diffuseColor + specularColor) * objectColor, 1);
 }
+

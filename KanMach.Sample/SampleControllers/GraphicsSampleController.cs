@@ -15,6 +15,7 @@ using System.IO;
 using KanMach.Core.FileManager;
 using KanMach.Veldrid.Model;
 using KanMach.Veldrid.EmbeddedShaders;
+using System.Threading.Tasks;
 
 namespace KanMach.Sample
 {
@@ -31,6 +32,9 @@ namespace KanMach.Sample
         private Sdl2InputManager _inputManager;
         private RenderMeshView _renderMeshView;
 
+        private PhongMaterial _cubeMaterial;
+
+        private float FRAME_RATE = 1000 / 60;
         private double CAMERA_MIN_Y_ROT = -89 * Math.PI / 180;
         private double CAMERA_MAX_Y_ROT = 89 * Math.PI / 180;
 
@@ -51,37 +55,39 @@ namespace KanMach.Sample
 
             _ecsWorld = new EcsWorld();
 
-            importedMeshes.ForEach((mesh) =>
-            {
-                var entity = _ecsWorld.NewEntity();
-                ref var transform = ref entity.Get<Transform>();
-                transform.Scale = new Vector3(1.0f, 1.0f, 1.0f);
-                transform.Rotation.X = (float)(180 * Math.PI / 180);
+            var mesh = importedMeshes.First();
 
-                ref var renderMesh = ref entity.Get<RenderMesh>();
+            var light = _ecsWorld.NewEntity();
+            ref var lightTransform = ref light.Get<Transform>();
+            lightTransform.Position = new Vector3(2, 15, 30);
+            lightTransform.Scale = new Vector3(0.1f);
 
-                renderMesh.Renderer = new MeshRenderer(
-                    _veldridService.RenderContext,
-                    mesh,
-                    PhongMaterial.GetInstance(_veldridService.RenderContext));
+            ref var lightRenderMesh = ref light.Get<RenderMesh>();
+            var lightMaterial = BasicMaterial.NewInstance(_veldridService.RenderContext);
+            lightMaterial.Color = new Vector3(1, 1, 1);
 
-                var light = _ecsWorld.NewEntity();
-                ref var lightTransform = ref light.Get<Transform>();
-                lightTransform.Position = new Vector3(2, 0, 30);
-                lightTransform.Scale = new Vector3(0.1f);
-                lightTransform.Rotation.X = (float)(180 * Math.PI / 180);
+            lightRenderMesh.Renderer = new MeshRenderer(
+                _veldridService.RenderContext,
+                mesh,
+                lightMaterial
+                );
 
-                ref var lightRenderMesh = ref light.Get<RenderMesh>();
-                var lightMaterial = BasicMaterial.GetInstance(_veldridService.RenderContext);
-                lightMaterial.Color = new Vector3(0, 1, 2);
+            var entity = _ecsWorld.NewEntity();
+            ref var transform = ref entity.Get<Transform>();
+            transform.Scale = new Vector3(1.0f, 1.0f, 1.0f);
 
-                lightRenderMesh.Renderer = new MeshRenderer(
-                    _veldridService.RenderContext,
-                    mesh,
-                    lightMaterial
-                    );
-            });
-                        
+            ref var renderMesh = ref entity.Get<RenderMesh>();
+
+            var cubeMaterial = PhongMaterial.NewInstance(_veldridService.RenderContext);
+            //cubeMaterial.LightPos = lightTransform.Position;
+            cubeMaterial.LightPos = new Vector3(2, 15, 30);
+
+            renderMesh.Renderer = new MeshRenderer(
+                _veldridService.RenderContext,
+                mesh,
+                cubeMaterial
+                );
+
             _renderer = new SceneRenderer(_veldridService.RenderContext);
             _renderer.Camera = _camera = new FirstPersonCamera(_renderer.ViewPort);
             _camera.Position = new Vector3(0, 0, 2);
@@ -92,11 +98,15 @@ namespace KanMach.Sample
 
         public override void Update(TimeSpan delta)
         {
+            // Clean up doesnt work smoothly.
+            //var waitTime = (int)Math.Max(FRAME_RATE - delta.Milliseconds, 0);
+            //if (waitTime > 0) Task.Delay(waitTime).Wait();
+            Task.Delay(0);
+
             _veldridService.PumpEvents();
             
-            // Maybe clean this up and also drossle the
-            // engine so that it doesn't run at unlimited speed all the time.
-            var deltaValue = delta.Ticks/1000000f;
+            var deltaValue = delta.Ticks / 1000000f;
+
             UpdateFpsCamera(deltaValue);
 
             _renderer.Draw(_renderMeshView.Select(entity => (entity.Component2.Renderer, entity.Component1)));
@@ -114,15 +124,15 @@ namespace KanMach.Sample
             {
                 var rStickMovement = gamepad.RightStick;
 
-                var xRot = _camera.Rotation.X + rStickMovement.X * deltaValue;
+                var xRot = _camera.Rotation.X + -rStickMovement.X * deltaValue;
                 var yRot = (float)Math.Min(
-                    Math.Max(_camera.Rotation.Y + rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT), CAMERA_MAX_Y_ROT);
+                    Math.Max(_camera.Rotation.Y + -rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT), CAMERA_MAX_Y_ROT);
                 _camera.Rotation = new Vector2(xRot, yRot);
 
                 var lStickMovement = gamepad.LeftStick;
 
                 var dirMatrix = Matrix4x4.CreateFromYawPitchRoll(_camera.Rotation.X, _camera.Rotation.Y, 0);
-                var dir = new Vector3(-lStickMovement.X * deltaValue, 0, lStickMovement.Y * deltaValue);
+                var dir = new Vector3(lStickMovement.X * deltaValue, 0, lStickMovement.Y * deltaValue);
 
                 _renderer.Camera.Position += Vector3.Transform(dir, dirMatrix);
             });
