@@ -14,13 +14,15 @@ namespace KanMach.Veldrid
 
         RenderContext RenderContext { get; }
 
+        InputSnapshot CurrentInputSnapshot { get; }
+
         delegate void OnCloseHandler();
         event OnCloseHandler OnClose;
 
+        void Update(TimeSpan delta);
         void Close();
         void DisposeResources();
         void Init();
 
-        void PumpEvents();
     }
 }

@@ -4,27 +4,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
+using Veldrid.StartupUtilities;
 
 namespace KanMach.Veldrid.Util.Options
 {
     public class MachOptions
     {
-        public MachWindowOptions WindowOptions { get; set; }
+        public WindowCreateInfo WindowOptions;
         public Sdl2InputManagerOptions Sdl2InputManagerOptions { get; set; }
         public GraphicsDeviceOptions GraphicsDeviceOptions { get; set; }
+        public GraphicsBackend Backend { get; set; }
 
         public MachOptions()
         {
-            WindowOptions = new MachWindowOptions();
+            WindowOptions = new WindowCreateInfo()
+            {
+                WindowHeight = 600,
+                WindowWidth = 800,
+                WindowTitle = "KanMach",
+                WindowInitialState = WindowState.Normal,
+                X = 100,
+                Y = 100,
+            };
 
             GraphicsDeviceOptions = new GraphicsDeviceOptions(
                 debug: false,
                 swapchainDepthFormat: PixelFormat.R16_UNorm,
                 syncToVerticalBlank: false,
                 resourceBindingModel: ResourceBindingModel.Improved,
+                // TODO They may not be supported greatly maybe change to use an alternative.
                 preferDepthRangeZeroToOne: true,
-                preferStandardClipSpaceYDirection: false
+                preferStandardClipSpaceYDirection: true
             );
+            Backend = GraphicsBackend.Vulkan;
 
             Sdl2InputManagerOptions = new Sdl2InputManagerOptions()
             {
@@ -32,7 +44,7 @@ namespace KanMach.Veldrid.Util.Options
             };
         }
 
-        public MachOptions(MachWindowOptions wOpt, GraphicsDeviceOptions gOpt)
+        public MachOptions(WindowCreateInfo wOpt, GraphicsDeviceOptions gOpt)
         {
             WindowOptions = wOpt;
             GraphicsDeviceOptions = gOpt;

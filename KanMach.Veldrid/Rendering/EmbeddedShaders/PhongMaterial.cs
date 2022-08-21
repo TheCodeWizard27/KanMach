@@ -1,10 +1,12 @@
 ﻿using KanMach.Veldrid.Components;
+using KanMach.Veldrid.Rendering.Structures;
 using KanMach.Veldrid.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
@@ -18,22 +20,29 @@ namespace KanMach.Veldrid.EmbeddedShaders
 
         private DeviceBuffer _lightPositionBuffer;
         private DeviceBuffer _lightColorBuffer;
+        private DeviceBuffer _ambientColorBuffer;
+        private DeviceBuffer _materialProperties;
 
         private ResourceLayout _mvpLayout;
         private ResourceSet _mvpSet;
         private ShaderSetDescription _shaderSet;
 
-        public Vector3 LightPos { get; set; } = Vector3.One;
-        public Vector3 LightColor { get; set; } = Vector3.One;
+
+        public Vector3 LightPos = Vector3.One;
+        public Vector3 LightColor = Vector3.One;
+        public Vector3 AmbientColor = Vector3.One;
+
+        public MaterialProperties MaterialProperties = new MaterialProperties();
 
         private PhongMaterial(RenderContext context, ShaderData shader)
         {
             var factory = context.ResourceFactory;
-
             Shader = shader;
 
             _lightPositionBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
             _lightColorBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            _ambientColorBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            _materialProperties = factory.CreateBuffer(new BufferDescription((uint) Unsafe.SizeOf<MaterialProperties>(), BufferUsage.UniformBuffer));
 
             _mvpLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
@@ -41,7 +50,9 @@ namespace KanMach.Veldrid.EmbeddedShaders
                         new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                         new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                         new ResourceLayoutElementDescription("LightPos", ResourceKind.UniformBuffer, ShaderStages.Vertex),
-                        new ResourceLayoutElementDescription("LightColor", ResourceKind.UniformBuffer, ShaderStages.Fragment)
+                        new ResourceLayoutElementDescription("LightColor", ResourceKind.UniformBuffer, ShaderStages.Fragment),
+                        new ResourceLayoutElementDescription("AmbientColor", ResourceKind.UniformBuffer, ShaderStages.Fragment),
+                        new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.UniformBuffer, ShaderStages.Fragment)
                 ));
 
             _shaderSet = new ShaderSetDescription(
@@ -54,12 +65,8 @@ namespace KanMach.Veldrid.EmbeddedShaders
                 }, shader.Shaders);
 
             Pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
-                new DepthStencilStateDescription(
-                    depthTestEnabled: true,
-                    depthWriteEnabled: true,
-                    comparisonKind: ComparisonKind.LessEqual
-                    ),
+                BlendStateDescription.SingleAlphaBlend,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
                 new RasterizerStateDescription(
                     cullMode: FaceCullMode.Back,
                     fillMode: PolygonFillMode.Solid,
@@ -79,7 +86,9 @@ namespace KanMach.Veldrid.EmbeddedShaders
                     context.ViewBuffer,
                     context.ProjectionBuffer,
                     _lightPositionBuffer,
-                    _lightColorBuffer
+                    _lightColorBuffer,
+                    _ambientColorBuffer,
+                    _materialProperties
                     ));
         }
 
@@ -89,6 +98,8 @@ namespace KanMach.Veldrid.EmbeddedShaders
             cmdList.SetGraphicsResourceSet(0, _mvpSet);
             cmdList.UpdateBuffer(_lightPositionBuffer, 0, LightPos);
             cmdList.UpdateBuffer(_lightColorBuffer, 0, LightColor);
+            cmdList.UpdateBuffer(_ambientColorBuffer, 0, AmbientColor);
+            cmdList.UpdateBuffer(_materialProperties, 0, MaterialProperties);
         }
 
         public override void Dispose()

@@ -30,6 +30,11 @@ namespace KanMach.Veldrid.Input.SDL_Mapping
             return ToString() == other.ToString();
         }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public static bool operator ==(SDL_JoystickGUID left, SDL_JoystickGUID right)
         {
             return left.Equals(right);

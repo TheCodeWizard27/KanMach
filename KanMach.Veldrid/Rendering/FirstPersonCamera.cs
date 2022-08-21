@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KanMach.Veldrid.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -22,15 +23,15 @@ namespace KanMach.Veldrid.Graphics
             }
         }
 
-        public FirstPersonCamera(Vector2 viewport) : base(viewport)
+        public FirstPersonCamera(RenderContext renderContext, Vector2 viewport) : base(renderContext, viewport)
         {
         }
 
         private void UpdateRotation(Vector2 rotation)
         {
-            var forward = new Vector3(0, 0, 1);
+            var forward = -Vector3.UnitZ;
             var transform = Matrix4x4.CreateFromYawPitchRoll(rotation.X, rotation.Y, 0);
-            Target = Position - Vector3.Transform(forward, transform);
+            Target = Position + Vector3.Transform(forward, transform);
         }
 
     } 

@@ -29,11 +29,10 @@ layout (location = 2) out vec3 vs_out_LightPos;
 
 void main()
 { 
-   
     gl_Position = Projection * View * Model * vec4(Position, 1);
 
     vs_out_FragPos = vec3(View * Model * vec4(Position, 1));
-    vs_out_Normal = vec3(mat3(transpose(inverse(Model))) * Normal);
+    vs_out_Normal = vec3(mat3(transpose(inverse(View * Model))) * Normal);
     vs_out_LightPos = vec3(View * vec4(vs_in_LightPos, 1));
 
 }

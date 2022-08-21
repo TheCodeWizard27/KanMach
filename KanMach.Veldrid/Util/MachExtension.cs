@@ -20,6 +20,7 @@ namespace KanMach.Veldrid.Util
             var veldridService = engine.Context.Provider.GetService<IVeldridService>();
             veldridService.OnClose += engine.Exit;
             engine.OnExit += veldridService.Close;
+            engine.OnUpdate += veldridService.Update;
 
             veldridService.Init();
 

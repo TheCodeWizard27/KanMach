@@ -16,6 +16,8 @@ using KanMach.Core.FileManager;
 using KanMach.Veldrid.Model;
 using KanMach.Veldrid.EmbeddedShaders;
 using System.Threading.Tasks;
+using Veldrid;
+using ImGuiNET;
 
 namespace KanMach.Sample
 {
@@ -28,11 +30,16 @@ namespace KanMach.Sample
 
         private EcsWorld _ecsWorld;
         private SceneRenderer _renderer;
+        private ImGuiRenderer _imGuiRenderer;
         private FirstPersonCamera _camera;
         private Sdl2InputManager _inputManager;
         private RenderMeshView _renderMeshView;
 
         private PhongMaterial _cubeMaterial;
+        private Entity _cubeEntity;
+
+        private BasicMaterial _lightMaterial;
+        private Entity _lightEntity;
 
         private float FRAME_RATE = 1000 / 60;
         private double CAMERA_MIN_Y_ROT = -89 * Math.PI / 180;
@@ -50,50 +57,12 @@ namespace KanMach.Sample
 
         public override void Init()
         {
-            // maps are not saved on git.
-            var importedMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/cube.dae");
-
-            _ecsWorld = new EcsWorld();
-
-            var mesh = importedMeshes.First();
-
-            var light = _ecsWorld.NewEntity();
-            ref var lightTransform = ref light.Get<Transform>();
-            lightTransform.Position = new Vector3(2, 15, 30);
-            lightTransform.Scale = new Vector3(0.1f);
-
-            ref var lightRenderMesh = ref light.Get<RenderMesh>();
-            var lightMaterial = BasicMaterial.NewInstance(_veldridService.RenderContext);
-            lightMaterial.Color = new Vector3(1, 1, 1);
-
-            lightRenderMesh.Renderer = new MeshRenderer(
-                _veldridService.RenderContext,
-                mesh,
-                lightMaterial
-                );
-
-            var entity = _ecsWorld.NewEntity();
-            ref var transform = ref entity.Get<Transform>();
-            transform.Scale = new Vector3(1.0f, 1.0f, 1.0f);
-
-            ref var renderMesh = ref entity.Get<RenderMesh>();
-
-            var cubeMaterial = PhongMaterial.NewInstance(_veldridService.RenderContext);
-            //cubeMaterial.LightPos = lightTransform.Position;
-            cubeMaterial.LightPos = new Vector3(2, 15, 30);
-
-            renderMesh.Renderer = new MeshRenderer(
-                _veldridService.RenderContext,
-                mesh,
-                cubeMaterial
-                );
-
             _renderer = new SceneRenderer(_veldridService.RenderContext);
-            _renderer.Camera = _camera = new FirstPersonCamera(_renderer.ViewPort);
-            _camera.Position = new Vector3(0, 0, 2);
+            _renderer.Camera = _camera = new FirstPersonCamera(_veldridService.RenderContext, _renderer.ViewPort);
+            _camera.Position = new Vector3(0, 0, 0);
 
-            _renderMeshView = _ecsWorld.View<RenderMeshView>();
-
+            SetupTestScene();
+            SetupImGui();
         }
 
         public override void Update(TimeSpan delta)
@@ -103,14 +72,60 @@ namespace KanMach.Sample
             //if (waitTime > 0) Task.Delay(waitTime).Wait();
             Task.Delay(0);
 
-            _veldridService.PumpEvents();
+            _imGuiRenderer.Update(delta.Seconds, _veldridService.CurrentInputSnapshot);
             
             var deltaValue = delta.Ticks / 1000000f;
 
             UpdateFpsCamera(deltaValue);
 
-            _renderer.Draw(_renderMeshView.Select(entity => (entity.Component2.Renderer, entity.Component1)));
+            #region Begin ImGui Debug Code
+            //  TODO Improve
 
+            ImGui.BeginGroup();
+            ImGui.Text("- Camera");
+
+            var pos = _camera.Position;
+            ImGui.DragFloat3("Position", ref pos);
+            _camera.Position = pos;
+
+            ImGui.EndGroup();
+
+            ImGui.BeginGroup();
+            ImGui.Text("- Light");
+            var lightColor = _lightMaterial.Color;
+            
+            ImGui.ColorEdit3("LightColor", ref lightColor);
+            _lightMaterial.Color = lightColor;
+            _cubeMaterial.LightColor = lightColor;
+
+            ImGui.DragFloat3("LightPos", ref _lightEntity.Get<Transform>().Position);
+            _cubeMaterial.LightPos = _lightEntity.Get<Transform>().Position;
+            
+            ImGui.EndGroup();
+
+            ImGui.BeginGroup();
+            ImGui.Text("- Cube");
+            
+            ImGui.ColorEdit3("Diffuse", ref _cubeMaterial.MaterialProperties.Diffuse);
+
+            var ambientColor = _cubeMaterial.AmbientColor;
+            ImGui.ColorEdit3("AmbientColor", ref ambientColor);
+            _cubeMaterial.AmbientColor = ambientColor;
+
+            ImGui.DragFloat3("Specular Strength", ref _cubeMaterial.MaterialProperties.Specular);
+
+            ImGui.DragFloat("Shininess", ref _cubeMaterial.MaterialProperties.Shininess);
+            ImGui.EndGroup();
+
+            #endregion
+
+            var commandList = _veldridService.RenderContext.BeginDraw();
+
+            var renderables = _renderMeshView.Select(entity => (entity.Component2.Renderer, entity.Component1));
+            _renderer.Draw(renderables, commandList);
+            _imGuiRenderer.Render(_veldridService.RenderContext.GraphicsDevice, commandList);
+
+            _veldridService.RenderContext.EndDraw();
         }
 
         public override void Dispose()
@@ -125,8 +140,7 @@ namespace KanMach.Sample
                 var rStickMovement = gamepad.RightStick;
 
                 var xRot = _camera.Rotation.X + -rStickMovement.X * deltaValue;
-                var yRot = (float)Math.Min(
-                    Math.Max(_camera.Rotation.Y + -rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT), CAMERA_MAX_Y_ROT);
+                var yRot = (float)Math.Clamp(_camera.Rotation.Y + -rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT); ;
                 _camera.Rotation = new Vector2(xRot, yRot);
 
                 var lStickMovement = gamepad.LeftStick;
@@ -136,6 +150,59 @@ namespace KanMach.Sample
 
                 _renderer.Camera.Position += Vector3.Transform(dir, dirMatrix);
             });
+        }
+
+        private void SetupImGui()
+        {
+            var graphicsDevice = _veldridService.RenderContext.GraphicsDevice;
+            _imGuiRenderer = new ImGuiRenderer(
+                graphicsDevice,
+                graphicsDevice.MainSwapchain.Framebuffer.OutputDescription,
+                (int)graphicsDevice.MainSwapchain.Framebuffer.Width,
+                (int)graphicsDevice.MainSwapchain.Framebuffer.Height);
+        }
+
+        private void SetupTestScene()
+        {
+            // Models are not saved on git.
+            var cubeMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/cube.dae");
+            //var importedMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/darksouls.dae");
+
+            _ecsWorld = new EcsWorld();
+            _renderMeshView = _ecsWorld.View<RenderMeshView>();
+
+            var cubeMesh = cubeMeshes.First();
+            //var mesh = importedMeshes.Skip(1).First();
+
+            // Create Light Entity
+            _lightEntity = _ecsWorld.NewEntity();
+            ref var lightTransform = ref _lightEntity.Get<Transform>();
+            lightTransform.Position = new Vector3(0, 3, 0);
+            lightTransform.Scale = new Vector3(0.1f);
+
+            ref var lightRenderMesh = ref _lightEntity.Get<RenderMesh>();
+            _lightMaterial = BasicMaterial.NewInstance(_veldridService.RenderContext);
+            _lightMaterial.Color = new Vector3(1, 1, 1);
+            lightRenderMesh.Renderer = new MeshRenderer(
+                _veldridService.RenderContext,
+                cubeMesh,
+                _lightMaterial
+                );
+
+
+            // Create Cube Model
+            _cubeEntity = _ecsWorld.NewEntity();
+            ref var cubeTransform = ref _cubeEntity.Get<Transform>();
+            cubeTransform.Scale = new Vector3(1.0f);
+
+            _cubeMaterial = PhongMaterial.NewInstance(_veldridService.RenderContext);
+            _cubeMaterial.LightPos = lightTransform.Position;
+            ref var renderMesh = ref _cubeEntity.Get<RenderMesh>();
+            renderMesh.Renderer = new MeshRenderer(
+                _veldridService.RenderContext,
+                cubeMesh,
+                _cubeMaterial
+                );
         }
 
         internal struct RenderMesh

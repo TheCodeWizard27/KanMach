@@ -38,7 +38,6 @@ namespace KanMach.Sample
         public override void Update(TimeSpan delta)
         {
 
-            _veldridService.PumpEvents();
             //_veldridService.Draw();
 
         }
