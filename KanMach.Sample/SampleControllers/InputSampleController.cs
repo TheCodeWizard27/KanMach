@@ -8,9 +8,9 @@ namespace KanMach.Sample
     public class InputSampleController : KanGameController
     {
         private readonly IVeldridService _veldridService;
-        private readonly Sdl2InputManager _inputManager;
+        private readonly IVeldridInputManager _inputManager;
 
-        public InputSampleController(IVeldridService veldridService, Sdl2InputManager inputManager)
+        public InputSampleController(IVeldridService veldridService, IVeldridInputManager inputManager)
         {
             _veldridService = veldridService;
             _inputManager = inputManager;

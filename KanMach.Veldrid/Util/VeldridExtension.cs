@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace KanMach.Veldrid.Util
 {
-    public static class MachExtension
+    public static class VeldridExtension
     {
 
         public static KanGameEngine UseVeldrid(this KanGameEngine engine)
@@ -23,9 +23,6 @@ namespace KanMach.Veldrid.Util
             engine.OnUpdate += veldridService.Update;
 
             veldridService.Init();
-
-            var inputManager = engine.Context.Provider.GetService<Sdl2InputManager>();
-            inputManager.StartListening();
 
             return engine;
         }
@@ -38,8 +35,8 @@ namespace KanMach.Veldrid.Util
             var veldridService = new VeldridService(machOptions);
             services.AddSingleton<IVeldridService>(veldridService);
 
-            var sdl2InputManager = new Sdl2InputManager(machOptions.Sdl2InputManagerOptions);
-            services.AddSingleton(sdl2InputManager);
+            var sdl2InputManager = new VeldridInputManager(machOptions.Sdl2InputManagerOptions, veldridService);
+            services.AddSingleton<IVeldridInputManager>(sdl2InputManager);
 
             return services;
         }

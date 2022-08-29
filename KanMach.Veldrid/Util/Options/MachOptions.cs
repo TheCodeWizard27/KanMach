@@ -11,7 +11,7 @@ namespace KanMach.Veldrid.Util.Options
     public class MachOptions
     {
         public WindowCreateInfo WindowOptions;
-        public Sdl2InputManagerOptions Sdl2InputManagerOptions { get; set; }
+        public VeldridInputManagerOptions Sdl2InputManagerOptions { get; set; }
         public GraphicsDeviceOptions GraphicsDeviceOptions { get; set; }
         public GraphicsBackend Backend { get; set; }
 
@@ -38,7 +38,7 @@ namespace KanMach.Veldrid.Util.Options
             );
             Backend = GraphicsBackend.Vulkan;
 
-            Sdl2InputManagerOptions = new Sdl2InputManagerOptions()
+            Sdl2InputManagerOptions = new VeldridInputManagerOptions()
             {
                 GamePadPollingEnabled = false
             };
@@ -50,9 +50,9 @@ namespace KanMach.Veldrid.Util.Options
             GraphicsDeviceOptions = gOpt;
         }
 
-        public void UseGamepads(Action<Sdl2InputManagerOptions> configurator = null)
+        public void UseGamepads(Action<VeldridInputManagerOptions> configurator = null)
         {
-            Sdl2InputManagerOptions = new Sdl2InputManagerOptions()
+            Sdl2InputManagerOptions = new VeldridInputManagerOptions()
             {
                 GamePadPollingEnabled = true
             };

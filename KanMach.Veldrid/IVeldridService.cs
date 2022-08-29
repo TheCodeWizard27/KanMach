@@ -14,10 +14,19 @@ namespace KanMach.Veldrid
 
         RenderContext RenderContext { get; }
 
+        bool KeepMouseCentered { get; set; }
+        bool MouseVisible { get; set; }
+
         InputSnapshot CurrentInputSnapshot { get; }
+
+        delegate void OnInitHandler();
+        event OnInitHandler OnInit;
 
         delegate void OnCloseHandler();
         event OnCloseHandler OnClose;
+
+        delegate void OnUpdateHandler(TimeSpan delta);
+        event OnUpdateHandler OnUpdate;
 
         void Update(TimeSpan delta);
         void Close();

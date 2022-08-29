@@ -32,7 +32,7 @@ namespace KanMach.Sample
         private SceneRenderer _renderer;
         private ImGuiRenderer _imGuiRenderer;
         private FirstPersonCamera _camera;
-        private Sdl2InputManager _inputManager;
+        private IVeldridInputManager _inputManager;
         private RenderMeshView _renderMeshView;
 
         private PhongMaterial _cubeMaterial;
@@ -41,6 +41,8 @@ namespace KanMach.Sample
         private BasicMaterial _lightMaterial;
         private Entity _lightEntity;
 
+        private bool _mouseCameraEnabled = false;
+
         private float FRAME_RATE = 1000 / 60;
         private double CAMERA_MIN_Y_ROT = -89 * Math.PI / 180;
         private double CAMERA_MAX_Y_ROT = 89 * Math.PI / 180;
@@ -48,7 +50,7 @@ namespace KanMach.Sample
         public GraphicsSampleController(
             IVeldridService veldridService,
             AssetLoader<FileSourceHandler> assetLoader,
-            Sdl2InputManager inputManager)
+            IVeldridInputManager inputManager)
         {
             _veldridService = veldridService;
             _assetLoader = assetLoader;
@@ -57,6 +59,8 @@ namespace KanMach.Sample
 
         public override void Init()
         {
+            _inputManager.Keyboard.OnButtonReleased += Keyboard_OnButtonReleased;
+
             _renderer = new SceneRenderer(_veldridService.RenderContext);
             _renderer.Camera = _camera = new FirstPersonCamera(_veldridService.RenderContext, _renderer.ViewPort);
             _camera.Position = new Vector3(0, 0, 0);
@@ -65,18 +69,23 @@ namespace KanMach.Sample
             SetupImGui();
         }
 
+        private void Keyboard_OnButtonReleased(Key button)
+        {
+            //Console.WriteLine(button);
+        }
+
         public override void Update(TimeSpan delta)
         {
             // Clean up doesnt work smoothly.
             //var waitTime = (int)Math.Max(FRAME_RATE - delta.Milliseconds, 0);
             //if (waitTime > 0) Task.Delay(waitTime).Wait();
-            Task.Delay(0);
+            //Task.Delay(100).Wait();
 
             _imGuiRenderer.Update(delta.Seconds, _veldridService.CurrentInputSnapshot);
             
             var deltaValue = delta.Ticks / 1000000f;
 
-            UpdateFpsCamera(deltaValue);
+            HandleInput(deltaValue);
 
             #region Begin ImGui Debug Code
             //  TODO Improve
@@ -133,14 +142,15 @@ namespace KanMach.Sample
             _veldridService.DisposeResources();
         }
 
-        private void UpdateFpsCamera(float deltaValue)
+        private void HandleInput(float deltaValue)
         {
+            #region Gamepad input
             _inputManager.Gamepads.ToList().ForEach(gamepad =>
             {
                 var rStickMovement = gamepad.RightStick;
 
                 var xRot = _camera.Rotation.X + -rStickMovement.X * deltaValue;
-                var yRot = (float)Math.Clamp(_camera.Rotation.Y + -rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT); ;
+                var yRot = (float)Math.Clamp(_camera.Rotation.Y + -rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT);
                 _camera.Rotation = new Vector2(xRot, yRot);
 
                 var lStickMovement = gamepad.LeftStick;
@@ -150,6 +160,55 @@ namespace KanMach.Sample
 
                 _renderer.Camera.Position += Vector3.Transform(dir, dirMatrix);
             });
+            #endregion
+
+            #region Keyboard input
+            if (_mouseCameraEnabled)
+            {
+                var test = _veldridService.RenderContext.GraphicsDevice.MainSwapchain.Framebuffer;
+                var mouseMovement = new Vector2(test.Width/2, test.Height/2) - _inputManager.Mouse.Position;
+                var mouseSensitivity = 0.5;
+
+                var xRot = _camera.Rotation.X + mouseMovement.X * mouseSensitivity * deltaValue;
+                var yRot = Math.Clamp(_camera.Rotation.Y + mouseMovement.Y * mouseSensitivity * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT);
+                _camera.Rotation = new Vector2((float)xRot, (float)yRot);
+
+                var wasdMovement = Vector2.Zero;
+
+                if (_inputManager.Keyboard.IsButtonDown(Key.W))
+                {
+                    wasdMovement += -Vector2.UnitY;
+                }
+                if (_inputManager.Keyboard.IsButtonDown(Key.A))
+                {
+                    wasdMovement += -Vector2.UnitX;
+                }
+                if (_inputManager.Keyboard.IsButtonDown(Key.S))
+                {
+                    wasdMovement += Vector2.UnitY;
+                }
+                if (_inputManager.Keyboard.IsButtonDown(Key.D))
+                {
+                    wasdMovement += Vector2.UnitX;
+                }
+
+                var dirMatrix = Matrix4x4.CreateFromYawPitchRoll(_camera.Rotation.X, _camera.Rotation.Y, 0);
+                var dir = new Vector3(wasdMovement.X * deltaValue, 0, wasdMovement.Y * deltaValue);
+
+                _renderer.Camera.Position += Vector3.Transform(dir, dirMatrix);
+            }
+
+            if(_inputManager.Keyboard.IsButtonClicked(Key.Escape)) {
+                _veldridService.KeepMouseCentered = !_veldridService.KeepMouseCentered;
+                _veldridService.MouseVisible = !_veldridService.MouseVisible;
+                _mouseCameraEnabled = !_mouseCameraEnabled;
+            }
+
+            if(_inputManager.Keyboard.IsButtonClicked(Key.X))
+            {
+                _veldridService.Close();
+            }
+            #endregion
         }
 
         private void SetupImGui()
