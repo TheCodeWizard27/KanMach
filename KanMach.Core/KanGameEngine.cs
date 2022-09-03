@@ -10,7 +10,7 @@ namespace KanMach.Core
         private readonly ILogger _logger;
         private bool _run = true;
 
-        public delegate void OnUpdateHandler(TimeSpan delta);
+        public delegate void OnUpdateHandler(FrameTime delta);
         public event OnUpdateHandler OnUpdate;
 
         public delegate void OnExitHandler();
@@ -47,7 +47,7 @@ namespace KanMach.Core
             while(_run)
             {
                 current = DateTime.Now;
-                Update(current - previous);
+                Update(new FrameTime(current - previous));
                 previous = current;
             }
 
@@ -55,7 +55,7 @@ namespace KanMach.Core
             CurrentController.Dispose();
         }
 
-        public void Update(TimeSpan delta)
+        public void Update(FrameTime delta)
         {
             OnUpdate?.Invoke(delta);
             CurrentController?.Update(delta);

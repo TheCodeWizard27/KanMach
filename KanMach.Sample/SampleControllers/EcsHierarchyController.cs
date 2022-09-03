@@ -69,7 +69,7 @@ namespace KanMach.Sample
             return newText;
         }
 
-        public override void Update(TimeSpan delta)
+        public override void Update(FrameTime delta)
         {
         }
 

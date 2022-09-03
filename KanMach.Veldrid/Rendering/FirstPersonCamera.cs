@@ -13,7 +13,17 @@ namespace KanMach.Veldrid.Graphics
     public class FirstPersonCamera : Camera
     {
         private Vector2 _rotation;
+        private Vector3 _position;
 
+        public override Vector3 Position 
+        { 
+            get => _position;
+            set {
+                _position = value;
+                UpdateRotation(Rotation);
+            }
+        }
+        public override Vector3 Target { get; set; }
         public Vector2 Rotation
         {
             get => _rotation;
@@ -22,7 +32,7 @@ namespace KanMach.Veldrid.Graphics
                 _rotation = value;
             }
         }
-
+        
         public FirstPersonCamera(RenderContext renderContext, Vector2 viewport) : base(renderContext, viewport)
         {
         }

@@ -11,7 +11,7 @@ namespace KanMach.Sample
     {
 
         public Action InitAction { get; set; }
-        public Action<TimeSpan> RunAction { get; set; }
+        public Action<FrameTime> RunAction { get; set; }
         public Action DisposeAction { get; set; }
 
 
@@ -20,7 +20,7 @@ namespace KanMach.Sample
             InitAction?.Invoke();
         }
 
-        public override void Run(TimeSpan delta)
+        public override void Run(FrameTime delta)
         {
             RunAction?.Invoke(delta);
         }

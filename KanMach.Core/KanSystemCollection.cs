@@ -32,7 +32,7 @@ namespace KanMach.Core
             Context = context;
         }
 
-        public void Run(TimeSpan delta)
+        public void Run(FrameTime delta)
         {
             Systems.ForEach(item => item.System.Run(delta));
         }

@@ -12,7 +12,7 @@ namespace KanMach.Core
 
         public abstract void Init();
 
-        public abstract void Run(TimeSpan delta);
+        public abstract void Run(FrameTime delta);
 
         public abstract void Dispose();
 

@@ -1,8 +1,10 @@
-﻿using KanMach.Veldrid.Components;
+﻿using KanMach.Core;
+using KanMach.Veldrid.Components;
 using KanMach.Veldrid.Util.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
@@ -13,6 +15,8 @@ namespace KanMach.Veldrid
     {
 
         RenderContext RenderContext { get; }
+
+        Vector2 Viewport { get; }
 
         bool KeepMouseCentered { get; set; }
         bool MouseVisible { get; set; }
@@ -25,10 +29,10 @@ namespace KanMach.Veldrid
         delegate void OnCloseHandler();
         event OnCloseHandler OnClose;
 
-        delegate void OnUpdateHandler(TimeSpan delta);
+        delegate void OnUpdateHandler(FrameTime delta);
         event OnUpdateHandler OnUpdate;
 
-        void Update(TimeSpan delta);
+        void Update(FrameTime delta);
         void Close();
         void DisposeResources();
         void Init();

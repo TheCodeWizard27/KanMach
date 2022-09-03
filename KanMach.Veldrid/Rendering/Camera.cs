@@ -10,7 +10,7 @@ using Veldrid.Sdl2;
 
 namespace KanMach.Veldrid.Graphics
 {
-    public class Camera
+    public abstract class Camera
     {
         private GraphicsDevice _graphicsDevice;
 
@@ -18,8 +18,8 @@ namespace KanMach.Veldrid.Graphics
         public float Near { get; set; }
         public float Far { get; set; }
 
-        public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
-        public Vector3 Target { get; set; } = new Vector3(0, 0, -1);
+        public abstract Vector3 Position { get; set; }
+        public abstract Vector3 Target { get; set; }
         public Vector3 CameraUp { get; set; } = Vector3.UnitY;
 
         public Vector2 Viewport { get; set; }
@@ -46,5 +46,16 @@ namespace KanMach.Veldrid.Graphics
             return Matrix4x4.CreatePerspectiveFieldOfView(Fov, Viewport.X / Viewport.Y, Near, Far);
         }
 
-    } 
+    }
+
+    public class SimpleCamera : Camera
+    {
+        public override Vector3 Position { get; set; }
+        public override Vector3 Target { get; set; }
+
+        public SimpleCamera(RenderContext context, Vector2 viewport) : base(context, viewport)
+        {
+        }
+        
+    }
 }

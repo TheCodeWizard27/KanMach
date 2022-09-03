@@ -53,7 +53,7 @@ namespace KanMach.Sample
             Console.WriteLine($"Looped through 10000 Entities in {DateTime.Now - time}");
         }
 
-        public override void Update(TimeSpan delta)
+        public override void Update(FrameTime delta)
         {
         }
 

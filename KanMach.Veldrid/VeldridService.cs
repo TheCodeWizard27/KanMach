@@ -1,6 +1,8 @@
-﻿using KanMach.Veldrid.Components;
+﻿using KanMach.Core;
+using KanMach.Veldrid.Components;
 using KanMach.Veldrid.Util.Options;
 using System;
+using System.Numerics;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -13,6 +15,7 @@ namespace KanMach.Veldrid
         
         private MachOptions _machOptions;
         
+        public Vector2 Viewport { get => new Vector2(MachWindow.Width, MachWindow.Height); }
         public bool KeepMouseCentered { get; set; }
         public bool MouseVisible { get; set; } = true;
 
@@ -40,7 +43,7 @@ namespace KanMach.Veldrid
             OnInit?.Invoke();
         }
 
-        public void Update(TimeSpan delta)
+        public void Update(FrameTime delta)
         {
             CurrentInputSnapshot = MachWindow.PumpEvents();
             OnUpdate?.Invoke(delta);

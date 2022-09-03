@@ -34,7 +34,7 @@ namespace KanMach.Sample
             });
         }
 
-        public override void Update(TimeSpan delta)
+        public override void Update(FrameTime delta)
         {
             _systemCollection.Run(delta);
         }

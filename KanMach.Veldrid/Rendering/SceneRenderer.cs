@@ -25,7 +25,7 @@ namespace KanMach.Veldrid.Rendering
                 context.GraphicsDevice.SwapchainFramebuffer.Width, 
                 context.GraphicsDevice.SwapchainFramebuffer.Height);
 
-            Camera = new Camera(context, ViewPort);
+            Camera = new SimpleCamera(context, ViewPort);
         }
 
         public void Draw(IEnumerable<(MeshRenderer, Transform)> meshRenderers)

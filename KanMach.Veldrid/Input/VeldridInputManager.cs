@@ -1,4 +1,5 @@
-﻿using KanMach.Veldrid.Util.Options;
+﻿using KanMach.Core;
+using KanMach.Veldrid.Util.Options;
 using System;
 using System.Linq;
 using System.Threading;
@@ -57,7 +58,7 @@ namespace KanMach.Veldrid.Input
             StartListening();
         }
 
-        private void VeldridService_OnUpdate(TimeSpan delta)
+        private void VeldridService_OnUpdate(FrameTime delta)
         {
             Keyboard.Update(_veldridService.CurrentInputSnapshot);
             Mouse.Update(_veldridService.CurrentInputSnapshot);

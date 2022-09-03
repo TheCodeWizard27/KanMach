@@ -18,6 +18,8 @@ using KanMach.Veldrid.EmbeddedShaders;
 using System.Threading.Tasks;
 using Veldrid;
 using ImGuiNET;
+using System.Threading;
+using KanMach.Core.Helper;
 
 namespace KanMach.Sample
 {
@@ -43,7 +45,7 @@ namespace KanMach.Sample
 
         private bool _mouseCameraEnabled = false;
 
-        private float FRAME_RATE = 1000 / 60;
+        private int FRAME_RATE = 60;
         private double CAMERA_MIN_Y_ROT = -89 * Math.PI / 180;
         private double CAMERA_MAX_Y_ROT = 89 * Math.PI / 180;
 
@@ -74,18 +76,13 @@ namespace KanMach.Sample
             //Console.WriteLine(button);
         }
 
-        public override void Update(TimeSpan delta)
+        public override void Update(FrameTime delta)
         {
-            // Clean up doesnt work smoothly.
-            //var waitTime = (int)Math.Max(FRAME_RATE - delta.Milliseconds, 0);
-            //if (waitTime > 0) Task.Delay(waitTime).Wait();
-            //Task.Delay(100).Wait();
+            var start = DateTime.Now;
 
-            _imGuiRenderer.Update(delta.Seconds, _veldridService.CurrentInputSnapshot);
+            _imGuiRenderer.Update(delta.GetDelta(FRAME_RATE), _veldridService.CurrentInputSnapshot);
             
-            var deltaValue = delta.Ticks / 1000000f;
-
-            HandleInput(deltaValue);
+            HandleInput(delta.GetDelta(FRAME_RATE));
 
             #region Begin ImGui Debug Code
             //  TODO Improve
@@ -135,6 +132,8 @@ namespace KanMach.Sample
             _imGuiRenderer.Render(_veldridService.RenderContext.GraphicsDevice, commandList);
 
             _veldridService.RenderContext.EndDraw();
+
+            FrameHelper.SleepPrecise(FRAME_RATE, DateTime.Now - start);
         }
 
         public override void Dispose()
@@ -148,9 +147,10 @@ namespace KanMach.Sample
             _inputManager.Gamepads.ToList().ForEach(gamepad =>
             {
                 var rStickMovement = gamepad.RightStick;
+                var stickSensitivity = 0.05f;
 
-                var xRot = _camera.Rotation.X + -rStickMovement.X * deltaValue;
-                var yRot = (float)Math.Clamp(_camera.Rotation.Y + -rStickMovement.Y * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT);
+                var xRot = _camera.Rotation.X + -rStickMovement.X * stickSensitivity * deltaValue;
+                var yRot = (float)Math.Clamp(_camera.Rotation.Y + -rStickMovement.Y * stickSensitivity * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT);
                 _camera.Rotation = new Vector2(xRot, yRot);
 
                 var lStickMovement = gamepad.LeftStick;
@@ -165,9 +165,9 @@ namespace KanMach.Sample
             #region Keyboard input
             if (_mouseCameraEnabled)
             {
-                var test = _veldridService.RenderContext.GraphicsDevice.MainSwapchain.Framebuffer;
-                var mouseMovement = new Vector2(test.Width/2, test.Height/2) - _inputManager.Mouse.Position;
-                var mouseSensitivity = 0.5;
+                var viewport = _veldridService.Viewport;
+                var mouseMovement = new Vector2(viewport.X/2, viewport.Y/2) - _inputManager.Mouse.Position;
+                var mouseSensitivity = 0.05f;
 
                 var xRot = _camera.Rotation.X + mouseMovement.X * mouseSensitivity * deltaValue;
                 var yRot = Math.Clamp(_camera.Rotation.Y + mouseMovement.Y * mouseSensitivity * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT);
@@ -194,7 +194,6 @@ namespace KanMach.Sample
 
                 var dirMatrix = Matrix4x4.CreateFromYawPitchRoll(_camera.Rotation.X, _camera.Rotation.Y, 0);
                 var dir = new Vector3(wasdMovement.X * deltaValue, 0, wasdMovement.Y * deltaValue);
-
                 _renderer.Camera.Position += Vector3.Transform(dir, dirMatrix);
             }
 

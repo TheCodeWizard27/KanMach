@@ -14,7 +14,7 @@ namespace KanMach.Core
 
         public abstract void Init();
 
-        public abstract void Update(TimeSpan delta);
+        public abstract void Update(FrameTime delta);
 
         public abstract void Dispose();
 
