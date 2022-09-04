@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KanMach.Core.FileManager
 {
@@ -18,16 +15,20 @@ namespace KanMach.Core.FileManager
             _processors = options.Processors;
         }
 
-        public T Load<T>(Stream stream, string path = "")
-        {
-            _processors.TryGetValue(typeof(T), out var processor);
+        internal T Load<T>(Stream stream, AssetLoaderContext context) {
+            return (T) Load(stream, typeof(T), context);
+        }
 
-            if(processor == null)
+        internal object Load(Stream stream, Type type, AssetLoaderContext context)
+        {
+            _processors.TryGetValue(type, out var processor);
+
+            if (processor == null)
             {
-                throw new InvalidOperationException($"No asset process for type {typeof(T)} configured.");
+                throw new InvalidOperationException($"No asset process for type {type} configured.");
             }
 
-            return (T) processor.ProcessObject(stream, path);
+            return processor.ProcessObject(stream, context);
         }
 
     }
@@ -46,9 +47,15 @@ namespace KanMach.Core.FileManager
 
         public T Load<T>(string path)
         {
+            return (T) Load(path, typeof(T));
+        }
+
+        private object Load(string path, Type type)
+        {
             using (var stream = _assetSource.GetStream(path))
             {
-                return _assetLoader.Load<T>(stream);
+                var context = new AssetLoaderContext(path, (path, type) => Load(path, type));
+                return _assetLoader.Load(stream, type, context);
             }
         }
 

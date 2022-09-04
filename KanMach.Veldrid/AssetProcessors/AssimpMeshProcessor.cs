@@ -15,9 +15,10 @@ namespace KanMach.Veldrid.AssetProcessors
 {
     public class AssimpMeshProcessor : AssetProcessor<List<Mesh>>
     {
-        public override List<Mesh> Process(Stream stream, string path)
+        public override List<Mesh> Process(Stream stream, AssetLoaderContext context)
         {   
             var assimpContext = new AssimpContext();
+            var path = context.Path;
             var scene = assimpContext.ImportFileFromStream(stream, PostProcessSteps.FlipWindingOrder, Path.GetExtension(path));
 
             var meshes = new List<Mesh>();

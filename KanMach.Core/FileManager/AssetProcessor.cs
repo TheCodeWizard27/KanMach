@@ -10,15 +10,15 @@ namespace KanMach.Core.FileManager
 
     public abstract class AssetProcessor
     {
-        public abstract object ProcessObject(Stream stream, string path);
+        public abstract object ProcessObject(Stream stream, AssetLoaderContext path);
     }
 
     public abstract class AssetProcessor<T> : AssetProcessor
     {
 
-        public override object ProcessObject(Stream stream, string path) => Process(stream, path);
+        public override object ProcessObject(Stream stream, AssetLoaderContext path) => Process(stream, path);
 
-        public abstract T Process(Stream stream, string path);
+        public abstract T Process(Stream stream, AssetLoaderContext path);
 
     }
 }

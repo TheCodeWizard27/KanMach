@@ -223,7 +223,7 @@ namespace KanMach.Sample
         private void SetupTestScene()
         {
             // Models are not saved on git.
-            var cubeMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/cube.dae");
+            var cubeMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/texturedCube.dae");
             //var importedMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/darksouls.dae");
 
             _ecsWorld = new EcsWorld();
