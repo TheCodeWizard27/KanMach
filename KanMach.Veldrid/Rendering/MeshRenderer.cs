@@ -1,5 +1,7 @@
-﻿using KanMach.Veldrid.Model;
+﻿using KanMach.Veldrid.EmbeddedShaders;
+using KanMach.Veldrid.Rendering;
 using KanMach.Veldrid.Rendering.Structures;
+using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +14,8 @@ namespace KanMach.Veldrid.Components
 {
     public class MeshRenderer
     {
+        private readonly DisposeCollector _disposeCollector = new DisposeCollector();
+
         private DeviceBuffer _vertexBuffer;
         private DeviceBuffer _indexBuffer;
 
@@ -19,6 +23,16 @@ namespace KanMach.Veldrid.Components
         public Material Material { get; private set; }
 
         RenderContext RenderContext { get; set; }
+
+        public MeshRenderer(RenderContext context, Model model) : this(context, model.Mesh, BasicMaterial.NewInstance(context))
+        {
+            if(model.MaterialData.DiffuseImage != null)
+            {
+                var texture = model.MaterialData.DiffuseImage.CreateDeviceTexture(context.GraphicsDevice, context.ResourceFactory);
+                ((BasicMaterial)Material).DiffuseTexture = context.ResourceFactory.CreateTextureView(texture);
+            }
+            
+        }
 
         public MeshRenderer(RenderContext context, Mesh mesh, Material material)
         {
@@ -28,11 +42,11 @@ namespace KanMach.Veldrid.Components
 
             var factory = context.ResourceFactory;
 
-            _vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * VertexData.SizeInBytes, BufferUsage.VertexBuffer));
-            _indexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * sizeof(uint), BufferUsage.IndexBuffer));
+            _vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)Mesh.Indices.Length * VertexData.SizeInBytes, BufferUsage.VertexBuffer));
+            _indexBuffer = factory.CreateBuffer(new BufferDescription((uint)Mesh.Indices.Length * sizeof(uint), BufferUsage.IndexBuffer));
 
-            context.GraphicsDevice.UpdateBuffer(_vertexBuffer, 0, mesh.Vertices);
-            context.GraphicsDevice.UpdateBuffer(_indexBuffer, 0, mesh.Indices);
+            context.GraphicsDevice.UpdateBuffer(_vertexBuffer, 0, Mesh.Vertices);
+            context.GraphicsDevice.UpdateBuffer(_indexBuffer, 0, Mesh.Indices);
         }
 
         public void Render(CommandList cmdList) {

@@ -24,11 +24,15 @@
   <ItemGroup>
     <None Remove="Rendering\EmbeddedShaders\Basic.frag" />
     <None Remove="Rendering\EmbeddedShaders\Basic.vert" />
+    <None Remove="Rendering\EmbeddedShaders\Flat.frag" />
+    <None Remove="Rendering\EmbeddedShaders\Flat.vert" />
     <None Remove="Rendering\EmbeddedShaders\Phong.frag" />
     <None Remove="Rendering\EmbeddedShaders\Phong.vert" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Rendering\EmbeddedShaders\Flat.frag" />
+    <EmbeddedResource Include="Rendering\EmbeddedShaders\Flat.vert" />
     <EmbeddedResource Include="Rendering\EmbeddedShaders\Basic.frag" />
     <EmbeddedResource Include="Rendering\EmbeddedShaders\Basic.vert" />
     <EmbeddedResource Include="Rendering\EmbeddedShaders\Phong.frag" />
@@ -46,6 +50,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\KanMach.Core\KanMach.Core.csproj" />
+    <ProjectReference Include="..\KanMach.Veldrid.ImageSharp\KanMach.Veldrid.ImageSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

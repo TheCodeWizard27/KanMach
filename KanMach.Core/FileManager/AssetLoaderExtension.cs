@@ -12,10 +12,10 @@ namespace KanMach.Core.FileManager
 
         public static IServiceCollection UseAssetManager(this IServiceCollection services, Action<AssetLoaderOptions> configurator = null)
         {
-            var loaderOptions = new AssetLoaderOptions();
+            
+            var loaderOptions = new AssetLoaderOptions(services);
             configurator?.Invoke(loaderOptions);
-            var assetLoader = new AssetLoader(loaderOptions);
-            services.AddSingleton(assetLoader);
+            services.AddSingleton<AssetLoader>();
 
             services.AddScoped(typeof(AssetLoader<>));
 

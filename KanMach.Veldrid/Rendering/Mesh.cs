@@ -1,12 +1,6 @@
 ﻿using KanMach.Veldrid.Rendering.Structures;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace KanMach.Veldrid.Model
+namespace KanMach.Veldrid.Rendering
 {
     public class Mesh
     {

@@ -8,11 +8,11 @@ namespace KanMach.Core.FileManager
     public class AssetLoader
     {
 
-        private readonly Dictionary<Type, AssetProcessor> _processors;
+        private readonly IServiceProvider _serviceProvider;
 
-        public AssetLoader(AssetLoaderOptions options)
+        public AssetLoader(IServiceProvider provider)
         {
-            _processors = options.Processors;
+            _serviceProvider = provider;
         }
 
         internal T Load<T>(Stream stream, AssetLoaderContext context) {
@@ -21,19 +21,16 @@ namespace KanMach.Core.FileManager
 
         internal object Load(Stream stream, Type type, AssetLoaderContext context)
         {
-            _processors.TryGetValue(type, out var processor);
+            using var scope = _serviceProvider.CreateScope();
 
-            if (processor == null)
-            {
-                throw new InvalidOperationException($"No asset process for type {type} configured.");
-            }
+            var processor = (AssetProcessor) ActivatorUtilities.CreateInstance(scope.ServiceProvider, type);
 
             return processor.ProcessObject(stream, context);
         }
 
     }
 
-    public class AssetLoader<AssetSource> where AssetSource : IAssetSource
+    public class AssetLoader<AssetSource> : IAssetLoader where AssetSource : IAssetSource 
     {
 
         private AssetLoader _assetLoader;
@@ -45,16 +42,21 @@ namespace KanMach.Core.FileManager
             _assetSource = (AssetSource) ActivatorUtilities.CreateInstance(serviceProvider, typeof(AssetSource));
         }
 
-        public T Load<T>(string path)
+        public AssetType Load<ProcessorType, AssetType>(string path) where ProcessorType : AssetProcessor<AssetType>
         {
-            return (T) Load(path, typeof(T));
+            return (AssetType) Load(path, typeof(ProcessorType));
+        }
+
+        public Stream Load(string path)
+        {
+            return _assetSource.GetStream(path);
         }
 
         private object Load(string path, Type type)
         {
             using (var stream = _assetSource.GetStream(path))
             {
-                var context = new AssetLoaderContext(path, (path, type) => Load(path, type));
+                var context = new AssetLoaderContext(path, this);
                 return _assetLoader.Load(stream, type, context);
             }
         }

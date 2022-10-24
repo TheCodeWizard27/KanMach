@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31129.286
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KanMach.Core", "KanMach.Core\KanMach.Core.csproj", "{F8E5B5B9-F448-46CD-A196-C73B86CFF391}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KanMach.Veldrid", "KanMach.Veldrid\KanMach.Veldrid.csproj", "{D2B86543-C969-41BA-A706-096D241342B9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KanMach.Sample", "KanMach.Sample\KanMach.Sample.csproj", "{F5C449BA-B011-478B-BDF2-490C9D0D314A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KanMach.Veldrid.ImageSharp", "KanMach.Veldrid.ImageSharp\KanMach.Veldrid.ImageSharp.csproj", "{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,14 @@ Global
 		{F5C449BA-B011-478B-BDF2-490C9D0D314A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F5C449BA-B011-478B-BDF2-490C9D0D314A}.Release|x86.ActiveCfg = Release|Any CPU
 		{F5C449BA-B011-478B-BDF2-490C9D0D314A}.Release|x86.Build.0 = Release|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Debug|x86.Build.0 = Debug|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Release|x86.ActiveCfg = Release|Any CPU
+		{A7DD4CC6-1A09-4E34-B0C1-E90C784CEF6C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

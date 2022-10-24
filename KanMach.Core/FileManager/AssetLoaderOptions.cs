@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,19 +11,16 @@ namespace KanMach.Core.FileManager
     public class AssetLoaderOptions
     {
 
-        internal readonly Dictionary<Type, AssetProcessor> Processors = new Dictionary<Type, AssetProcessor>();
-        internal readonly List<Type> Sources = new List<Type>();
+        public IServiceCollection Services { get; set; }
 
-        public AssetLoaderOptions AddProcessor<T>(AssetProcessor<T> processor)
+        public AssetLoaderOptions(IServiceCollection serviceCollection)
         {
-            Processors.Add(typeof(T), processor);
-            return this;
+            Services = serviceCollection;
         }
 
-        public AssetLoaderOptions AddSource<T>() where T : IAssetSource
+        public void AddProcessor<T>() where T : class
         {
-            Sources.Add(typeof(T));
-            return this;
+            Services.AddScoped<T>();
         }
 
     }

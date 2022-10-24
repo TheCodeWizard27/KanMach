@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,17 +10,19 @@ namespace KanMach.Core.FileManager
     public class AssetLoaderContext
     {
 
-        private Func<string, Type, object> _loadRedirect;
+        private IAssetLoader _assetLoader;
 
         public string Path { get; set; }
 
-        internal AssetLoaderContext(string path, Func<string, Type, object> loadRedirect)
+        internal AssetLoaderContext(string path, IAssetLoader assetLoader)
         {
             Path = path;
-            _loadRedirect = loadRedirect;
+            _assetLoader = assetLoader;
         }
 
-        public T Load<T>(string path) => (T) _loadRedirect.Invoke(path, typeof(T));
+        public AssetType Load<ProcessorType, AssetType>(string path) where ProcessorType : AssetProcessor<AssetType>
+            => _assetLoader.Load<ProcessorType, AssetType>(path);
+        public Stream Load(string path) => _assetLoader.Load(path);
 
     }
 }

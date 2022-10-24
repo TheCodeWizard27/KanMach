@@ -11,15 +11,13 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Numerics;
 using KanMach.Veldrid.Graphics;
-using System.IO;
 using KanMach.Core.FileManager;
-using KanMach.Veldrid.Model;
 using KanMach.Veldrid.EmbeddedShaders;
-using System.Threading.Tasks;
 using Veldrid;
 using ImGuiNET;
-using System.Threading;
 using KanMach.Core.Helper;
+using KanMach.Veldrid.AssetProcessors.AssimpProcessor;
+using KanMach.Veldrid.Rendering.Structures;
 
 namespace KanMach.Sample
 {
@@ -37,10 +35,10 @@ namespace KanMach.Sample
         private IVeldridInputManager _inputManager;
         private RenderMeshView _renderMeshView;
 
-        private PhongMaterial _cubeMaterial;
+        private BasicMaterial _cubeMaterial;
         private Entity _cubeEntity;
 
-        private BasicMaterial _lightMaterial;
+        private FlatMaterial _lightMaterial;
         private Entity _lightEntity;
 
         private bool _mouseCameraEnabled = false;
@@ -118,7 +116,7 @@ namespace KanMach.Sample
             ImGui.ColorEdit3("AmbientColor", ref ambientColor);
             _cubeMaterial.AmbientColor = ambientColor;
 
-            ImGui.DragFloat3("Specular Strength", ref _cubeMaterial.MaterialProperties.Specular);
+            ImGui.DragFloat3("Specular Strength", ref _cubeMaterial.MaterialProperties.Specular, 0.01f);
 
             ImGui.DragFloat("Shininess", ref _cubeMaterial.MaterialProperties.Shininess);
             ImGui.EndGroup();
@@ -167,7 +165,7 @@ namespace KanMach.Sample
             {
                 var viewport = _veldridService.Viewport;
                 var mouseMovement = new Vector2(viewport.X/2, viewport.Y/2) - _inputManager.Mouse.Position;
-                var mouseSensitivity = 0.05f;
+                var mouseSensitivity = 0.025f;
 
                 var xRot = _camera.Rotation.X + mouseMovement.X * mouseSensitivity * deltaValue;
                 var yRot = Math.Clamp(_camera.Rotation.Y + mouseMovement.Y * mouseSensitivity * deltaValue, CAMERA_MIN_Y_ROT, CAMERA_MAX_Y_ROT);
@@ -223,7 +221,7 @@ namespace KanMach.Sample
         private void SetupTestScene()
         {
             // Models are not saved on git.
-            var cubeMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/texturedCube.dae");
+            var cubeMeshes = _assetLoader.Load<AssimpModelProcessor, List<Model>>("SampleModels/matrix-cube.fbx");
             //var importedMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/darksouls.dae");
 
             _ecsWorld = new EcsWorld();
@@ -239,28 +237,26 @@ namespace KanMach.Sample
             lightTransform.Scale = new Vector3(0.1f);
 
             ref var lightRenderMesh = ref _lightEntity.Get<RenderMesh>();
-            _lightMaterial = BasicMaterial.NewInstance(_veldridService.RenderContext);
+            _lightMaterial = FlatMaterial.NewInstance(_veldridService.RenderContext);
             _lightMaterial.Color = new Vector3(1, 1, 1);
             lightRenderMesh.Renderer = new MeshRenderer(
                 _veldridService.RenderContext,
-                cubeMesh,
+                cubeMesh.Mesh,
                 _lightMaterial
                 );
-
 
             // Create Cube Model
             _cubeEntity = _ecsWorld.NewEntity();
             ref var cubeTransform = ref _cubeEntity.Get<Transform>();
             cubeTransform.Scale = new Vector3(1.0f);
 
-            _cubeMaterial = PhongMaterial.NewInstance(_veldridService.RenderContext);
-            _cubeMaterial.LightPos = lightTransform.Position;
             ref var renderMesh = ref _cubeEntity.Get<RenderMesh>();
             renderMesh.Renderer = new MeshRenderer(
                 _veldridService.RenderContext,
-                cubeMesh,
-                _cubeMaterial
+                cubeMesh
                 );
+            _cubeMaterial = (BasicMaterial) renderMesh.Renderer.Material;
+            _cubeMaterial.LightPos = lightTransform.Position;
         }
 
         internal struct RenderMesh
