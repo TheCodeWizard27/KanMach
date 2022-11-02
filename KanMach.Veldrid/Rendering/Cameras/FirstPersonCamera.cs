@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 using Veldrid.Sdl2;
 
-namespace KanMach.Veldrid.Graphics
+namespace KanMach.Veldrid.Graphics.Cameras
 {
     public class FirstPersonCamera : Camera
     {

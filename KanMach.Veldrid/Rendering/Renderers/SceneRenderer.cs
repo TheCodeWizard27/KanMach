@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
 
-namespace KanMach.Veldrid.Rendering
+namespace KanMach.Veldrid.Rendering.Renderers
 {
     public class SceneRenderer
     {

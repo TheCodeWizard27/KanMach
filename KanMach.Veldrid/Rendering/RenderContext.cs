@@ -33,6 +33,9 @@ namespace KanMach.Veldrid.Components
         {
             _commandList.Begin();
 
+            var depthTexture = ResourceFactory.CreateTexture(new TextureDescription(100, 100, 1, 1, 1, PixelFormat.R8_UInt, TextureUsage.DepthStencil, TextureType.Texture2D));
+            ResourceFactory.CreateFramebuffer(new FramebufferDescription(depthTexture, ))
+
             _commandList.SetFramebuffer(GraphicsDevice.MainSwapchain.Framebuffer);
 
             _commandList.ClearColorTarget(0, RgbaFloat.Black);

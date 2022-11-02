@@ -221,7 +221,7 @@ namespace KanMach.Sample
         private void SetupTestScene()
         {
             // Models are not saved on git.
-            var cubeMeshes = _assetLoader.Load<AssimpModelProcessor, List<Model>>("SampleModels/matrix-cube.fbx");
+            var cubeMeshes = _assetLoader.Load<AssimpModelProcessor, List<Model>>("SampleModels/teapot.fbx");
             //var importedMeshes = _assetLoader.Load<List<Mesh>>("SampleModels/darksouls.dae");
 
             _ecsWorld = new EcsWorld();
