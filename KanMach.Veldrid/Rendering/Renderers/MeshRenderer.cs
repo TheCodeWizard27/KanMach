@@ -1,4 +1,5 @@
-﻿using KanMach.Veldrid.EmbeddedShaders;
+﻿using KanMach.Veldrid.Components;
+using KanMach.Veldrid.EmbeddedShaders;
 using KanMach.Veldrid.Rendering;
 using KanMach.Veldrid.Rendering.Structures;
 using SharpDX;
@@ -10,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
 
-namespace KanMach.Veldrid.Components
+namespace KanMach.Veldrid.Rendering.Renderers
 {
     public class MeshRenderer
     {

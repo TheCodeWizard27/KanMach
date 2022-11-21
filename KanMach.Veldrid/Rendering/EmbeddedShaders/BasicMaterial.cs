@@ -46,7 +46,7 @@ namespace KanMach.Veldrid.EmbeddedShaders
             } 
         }
 
-        private unsafe BasicMaterial(RenderContext context, ShaderData shader)
+        private unsafe BasicMaterial(RenderContext context, ShaderData shader, PrimitiveTopology primitiveTopology)
         {
             Context = context;
             var factory = context.ResourceFactory;
@@ -99,7 +99,7 @@ namespace KanMach.Veldrid.EmbeddedShaders
                     depthClipEnabled: true,
                     scissorTestEnabled: false
                     ),
-                PrimitiveTopology.TriangleList,
+                primitiveTopology,
                 _shaderSet,
                 new []
                 {
@@ -146,7 +146,9 @@ namespace KanMach.Veldrid.EmbeddedShaders
             InitMaterialSet();
         }
 
-        public static BasicMaterial NewInstance(RenderContext context)
+        // TODO move this to use renderContext and not be static.
+        public static BasicMaterial NewInstance(RenderContext context, 
+            PrimitiveTopology primitiveTopology = PrimitiveTopology.TriangleList)
         {
             if(_phongShader == null)
             {
@@ -156,7 +158,7 @@ namespace KanMach.Veldrid.EmbeddedShaders
                 _phongShader = new ShaderData(context, vertShader, fragShader);
             }
 
-            return new BasicMaterial(context, _phongShader);
+            return new BasicMaterial(context, _phongShader, primitiveTopology);
         }
 
         private void InitMaterialSet()

@@ -9,7 +9,9 @@ namespace KanMach.Veldrid.Components
 {
     public class RenderContext
     {
-        private CommandList _commandList;
+        protected CommandList _commandList;
+
+        public Dictionary<string, DeviceBuffer> SharedBuffers { get; private set; }
 
         public DeviceBuffer ModelBuffer { get; private set; }
         public DeviceBuffer ViewBuffer { get; private set; }
@@ -20,6 +22,8 @@ namespace KanMach.Veldrid.Components
 
         public RenderContext(GraphicsDevice graphicsDevice)
         {
+            SharedBuffers = new Dictionary<string, DeviceBuffer>();
+
             GraphicsDevice = graphicsDevice;
 
             ModelBuffer = ResourceFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
@@ -29,12 +33,9 @@ namespace KanMach.Veldrid.Components
             _commandList = ResourceFactory.CreateCommandList();
         }
 
-        public CommandList BeginDraw()
+        public virtual CommandList BeginDraw()
         {
             _commandList.Begin();
-
-            var depthTexture = ResourceFactory.CreateTexture(new TextureDescription(100, 100, 1, 1, 1, PixelFormat.R8_UInt, TextureUsage.DepthStencil, TextureType.Texture2D));
-            ResourceFactory.CreateFramebuffer(new FramebufferDescription(depthTexture, ))
 
             _commandList.SetFramebuffer(GraphicsDevice.MainSwapchain.Framebuffer);
 
@@ -44,7 +45,7 @@ namespace KanMach.Veldrid.Components
             return _commandList;
         }
 
-        public void EndDraw()
+        public virtual void EndDraw()
         {
             _commandList.End();
             GraphicsDevice.SubmitCommands(_commandList);

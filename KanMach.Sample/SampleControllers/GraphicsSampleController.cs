@@ -18,6 +18,8 @@ using ImGuiNET;
 using KanMach.Core.Helper;
 using KanMach.Veldrid.AssetProcessors.AssimpProcessor;
 using KanMach.Veldrid.Rendering.Structures;
+using KanMach.Veldrid.Rendering.Renderers;
+using KanMach.Veldrid.Graphics.Cameras;
 
 namespace KanMach.Sample
 {
@@ -29,7 +31,8 @@ namespace KanMach.Sample
         private readonly AssetLoader<FileSourceHandler> _assetLoader;
 
         private EcsWorld _ecsWorld;
-        private SceneRenderer _renderer;
+        private SceneRenderContext _sceneRenderContext;
+        private ForwardSceneRenderer _renderer;
         private ImGuiRenderer _imGuiRenderer;
         private FirstPersonCamera _camera;
         private IVeldridInputManager _inputManager;
@@ -61,7 +64,9 @@ namespace KanMach.Sample
         {
             _inputManager.Keyboard.OnButtonReleased += Keyboard_OnButtonReleased;
 
-            _renderer = new SceneRenderer(_veldridService.RenderContext);
+            _sceneRenderContext = new SceneRenderContext(_veldridService.RenderContext);
+
+            _renderer = new ForwardSceneRenderer(_sceneRenderContext);
             _renderer.Camera = _camera = new FirstPersonCamera(_veldridService.RenderContext, _renderer.ViewPort);
             _camera.Position = new Vector3(0, 0, 0);
 
